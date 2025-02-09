@@ -9,5 +9,6 @@
     "codeowners": ["@stevesinchak"],
     "requirements": ["requests"],
     "iot_class": "local_polling",
-    "zeroconf": [ "_weatherlinklive._tcp.local." ]
+    "zeroconf": [ "_weatherlinklive._tcp.local." ],
+    "single_config_entry": true
   }
