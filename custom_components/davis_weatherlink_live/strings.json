@@ -1,0 +1,18 @@
+{
+    "config": {
+      "step": {
+        "user": {
+          "data": {
+            "api_host": "API Host or IP Address",
+            "api_path": "API Path",
+            "update_interval": "Update Interval"
+          },
+          "data_description": {
+            "api_host": "Host or IP Address of your WeatherLink Live device",
+            "api_path": "Path to the API endoint on your WeatherLink Live device",
+            "update_interval": "Amount of time between updates in seconds"
+          }
+        }
+      }
+    }
+  }

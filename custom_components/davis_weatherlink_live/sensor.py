@@ -3,6 +3,7 @@ from __future__ import annotations
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription, SensorDeviceClass
 from homeassistant.const import UnitOfTemperature, PERCENTAGE, UnitOfPressure, UnitOfSpeed, UnitOfLength, DEGREE
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.entity import EntityCategory
 from .const import DOMAIN
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
@@ -121,6 +122,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="rain_size",
         name="Rain Cup Size",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_visible_default=False,
     ),
     SensorEntityDescription(
         key="rain_rate_last",
@@ -172,10 +175,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="rx_state",
         name="ISS RX Status",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="trans_battery_flag",
         name="ISS Battery Low",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="rainfall_daily",
@@ -267,7 +272,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class WeatherSensor(CoordinatorEntity, SensorEntity):
 
     _attr_has_entity_name = True # Allows entity names to be customized as sensor.deviceName_descriptionKey 
-    
+
     def __init__(self, coordinator, description: SensorEntityDescription, device_id: str):
         super().__init__(coordinator)
         self.entity_description = description
