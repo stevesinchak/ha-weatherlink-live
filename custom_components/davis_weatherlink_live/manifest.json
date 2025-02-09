@@ -4,6 +4,7 @@
     "version": "1.2.3",
     "config_flow": true,
     "documentation": "https://github.com/stevesinchak/ha-weatherlink-live",
+    "issue_tracker": "https://github.com/stevesinchak/ha-weatherlink-live/issues",
     "dependencies": [],
     "codeowners": ["@stevesinchak"],
     "requirements": ["requests"],
