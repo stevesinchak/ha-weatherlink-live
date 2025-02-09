@@ -1,0 +1,84 @@
+from homeassistant import config_entries
+from homeassistant.core import callback
+import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
+import logging
+from .const import DOMAIN, API_PATH
+
+_LOGGER = logging.getLogger(__name__)
+
+class WeatherStationConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+
+    async def async_step_zeroconf(self, discovery_info):
+        _LOGGER.info("Zeroconf discovery_info: %s", discovery_info)
+
+        host = discovery_info.host
+
+        # The WeatherLink Live device does not expose its serial number directly via Zeroconf.
+        # Therefore, we must use the hostname which includes the last six digits of the serial number for a unique id. 
+        # Example hostname: "weatherlinklive-33a9cb.local."
+        unique_id = discovery_info.hostname
+        _LOGGER.info("Discovered unique id: %s", unique_id)
+
+        # Set unique_id and abort if it was set by Zeroconf to avoid duplicate device discovery
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured()
+        
+        return await self._async_set_host(host)
+    
+    async def _async_set_host(self, host):
+        self.context["host"] = host
+        _LOGGER.info("Host set to: %s", host)
+        return await self.async_step_user()
+
+    async def async_step_user(self, user_input=None):
+        errors = {}
+
+        if user_input is not None:
+            return self.async_create_entry(
+                title="Weather Station",
+                data={},  # Store any required data here
+                options=user_input  # Store user input in options
+            )
+        
+        data_schema = vol.Schema({
+            vol.Required("api_host", default=self.context.get("host", "")): cv.string, # Grab host from Zeroconf if available
+            vol.Required("api_path", default=API_PATH): cv.string,
+            vol.Required("update_interval", default=10): cv.positive_int
+        })
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=data_schema,
+            errors=errors
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        return WeatherStationOptionsFlow(config_entry)
+
+class WeatherStationOptionsFlow(config_entries.OptionsFlowWithConfigEntry):
+
+    #def __init__(self, config_entry):
+
+    async def async_step_init(self, user_input=None):
+        errors = {}
+
+        if user_input is not None:
+            # Update options with new values
+            return self.async_create_entry(title="", data=user_input)
+
+        # Pre-fill form fields with current options
+        data_schema = vol.Schema({
+            vol.Required("api_host", default=self.config_entry.options.get("api_host", "")): cv.string,
+            vol.Required("api_path", default=self.config_entry.options.get("api_path", "")): cv.string,
+            vol.Required("update_interval", default=self.config_entry.options.get("update_interval", 10)): cv.positive_int,
+        })
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=data_schema,
+            errors=errors,
+            description_placeholders={"restart_note": "You will need to restart the custom integration for changes to take effect."}
+        )

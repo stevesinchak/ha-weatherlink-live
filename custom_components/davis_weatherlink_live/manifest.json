@@ -1,0 +1,12 @@
+{
+    "domain": "davis_weatherlink_live",
+    "name": "Davis WeatherLink Live 6100",
+    "version": "1.2.3",
+    "config_flow": true,
+    "documentation": "https://github.com/stevesinchak/ha-weatherlink-live",
+    "dependencies": [],
+    "codeowners": ["@stevesinchak"],
+    "requirements": ["requests"],
+    "iot_class": "local_polling",
+    "zeroconf": [ "_weatherlinklive._tcp.local." ]
+  }
