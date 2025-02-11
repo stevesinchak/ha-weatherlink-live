@@ -1,4 +1,13 @@
-from homeassistant import config_entries
+#from homeassistant import config_entries
+
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+    OptionsFlowWithConfigEntry,
+)
+
 from homeassistant.core import callback
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
@@ -7,7 +16,7 @@ from .const import DOMAIN, API_PATH
 
 _LOGGER = logging.getLogger(__name__)
 
-class WeatherStationConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class WeatherStationConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(self, discovery_info):
         _LOGGER.info("Zeroconf discovery_info: %s", discovery_info)
@@ -50,7 +59,12 @@ class WeatherStationConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=data_schema,
-            errors=errors
+            errors=errors,
+            description_placeholders={
+                "api_host": "The hostname or IP address of the WeatherLink Live device.",
+                "api_path": "The API path for accessing the WeatherLink Live data.",
+                "update_interval": "The interval (in seconds) at which data should be updated."
+            }
         )
 
     @staticmethod
@@ -58,7 +72,7 @@ class WeatherStationConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(config_entry):
         return WeatherStationOptionsFlow(config_entry)
 
-class WeatherStationOptionsFlow(config_entries.OptionsFlowWithConfigEntry):
+class WeatherStationOptionsFlow(OptionsFlowWithConfigEntry):
 
     #def __init__(self, config_entry):
 
@@ -80,5 +94,9 @@ class WeatherStationOptionsFlow(config_entries.OptionsFlowWithConfigEntry):
             step_id="init",
             data_schema=data_schema,
             errors=errors,
-            description_placeholders={"restart_note": "You will need to restart the custom integration for changes to take effect."}
+            description_placeholders={
+                "api_host": "The hostname or IP address of the WeatherLink Live device.",
+                "api_path": "The API path for accessing the WeatherLink Live data.",
+                "update_interval": "The interval (in seconds) at which data should be updated."
+            }
         )

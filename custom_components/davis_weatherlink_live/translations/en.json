@@ -1,0 +1,36 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "api_host": "Hostname or IP Address",
+                    "api_path": "API Path",
+                    "update_interval": "Update Interval"
+                },
+                "data_description": {
+                    "api_host": "Host or IP Address of your WeatherLink Live device",
+                    "api_path": "API endpoint on your WeatherLink Live device",
+                    "update_interval": "Amount of time between sensor updates in seconds"
+                }
+                
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "api_host": "Hostname or IP Address",
+                    "api_path": "API Path",
+                    "update_interval": "Update Interval"
+                },
+                "data_description": {
+                    "api_host": "Host or IP Address of your WeatherLink Live device",
+                    "api_path": "API endpoint on your WeatherLink Live device",
+                    "update_interval": "Amount of time between sensor updates in seconds"
+                }
+                
+            }
+        }
+    }
+}
