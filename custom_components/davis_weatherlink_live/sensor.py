@@ -6,6 +6,11 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.entity import EntityCategory
 from .const import DOMAIN
 
+from .coordinator import WeatherCoordinator
+from . import MyConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="temp",
@@ -260,11 +265,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
-async def async_setup_entry(hass, entry, async_add_entities):
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+async def async_setup_entry(hass: HomeAssistant, config_entry: MyConfigEntry, async_add_entities: AddEntitiesCallback): #(hass, entry, async_add_entities):
+    #coordinator = hass.data[DOMAIN][entry.entry_id]
+
+    # This gets the data update coordinator from the config entry runtime data as specified in your __init__.py
+    coordinator: WeatherCoordinator = config_entry.runtime_data.coordinator
 
     # Create a unique device ID based on the integration entry ID
-    device_id = entry.entry_id
+    device_id = config_entry.entry_id
 
     sensors = [WeatherSensor(coordinator, description, device_id) for description in SENSOR_TYPES]
     async_add_entities(sensors)

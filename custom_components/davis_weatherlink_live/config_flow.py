@@ -1,4 +1,4 @@
-#from homeassistant import config_entries
+from __future__ import annotations
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -7,6 +7,8 @@ from homeassistant.config_entries import (
     OptionsFlow,
     OptionsFlowWithConfigEntry,
 )
+
+from typing import Any
 
 from homeassistant.core import callback
 import voluptuous as vol
@@ -40,14 +42,14 @@ class WeatherStationConfigFlow(ConfigFlow, domain=DOMAIN):
         _LOGGER.info("Host set to: %s", host)
         return await self.async_step_user()
 
-    async def async_step_user(self, user_input=None):
-        errors = {}
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             return self.async_create_entry(
                 title="Weather Station",
                 data={},  # Store any required data here
-                options=user_input  # Store user input in options
+                options=user_input  # Store user input in options so they can change them later
             )
         
         data_schema = vol.Schema({
