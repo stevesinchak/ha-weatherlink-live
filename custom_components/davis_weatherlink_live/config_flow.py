@@ -14,7 +14,7 @@ from homeassistant.core import callback
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 import logging
-from .const import DOMAIN, API_PATH
+from .const import DOMAIN, API_PATH, API_INITIAL_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ class WeatherStationConfigFlow(ConfigFlow, domain=DOMAIN):
         data_schema = vol.Schema({
             vol.Required("api_host", default=self.context.get("host", "")): cv.string, # Grab host from Zeroconf if available
             vol.Required("api_path", default=API_PATH): cv.string,
-            vol.Required("update_interval", default=10): cv.positive_int
+            vol.Required("update_interval", default=API_INITIAL_INTERVAL): cv.positive_int
         })
 
         return self.async_show_form(
@@ -89,7 +89,7 @@ class WeatherStationOptionsFlow(OptionsFlowWithConfigEntry):
         data_schema = vol.Schema({
             vol.Required("api_host", default=self.config_entry.options.get("api_host", "")): cv.string,
             vol.Required("api_path", default=self.config_entry.options.get("api_path", "")): cv.string,
-            vol.Required("update_interval", default=self.config_entry.options.get("update_interval", 10)): cv.positive_int,
+            vol.Required("update_interval", default=self.config_entry.options.get("update_interval", API_INITIAL_INTERVAL)): cv.positive_int,
         })
 
         return self.async_show_form(
