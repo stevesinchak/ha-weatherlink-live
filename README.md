@@ -1,3 +1,5 @@
+![Davis Logo](https://raw.githubusercontent.com/stevesinchak/ha-weatherlink-live/main/brand/davis_weatherlink_live/logo.png)
+
 # Davis WeatherLink Live Custom Integration
 * [Introduction](#introduction)
 * [Installation](#installation)
