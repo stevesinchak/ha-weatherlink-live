@@ -14,6 +14,7 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -181,13 +182,13 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="rain_rate_last",
         translation_key="rain_rate_last",
-        native_unit_of_measurement=UnitOfLength.INCHES,
+        native_unit_of_measurement=UnitOfVolumetricFlux.INCHES_PER_HOUR,
         device_class=SensorDeviceClass.PRECIPITATION,
     ),
     SensorEntityDescription(
         key="rain_rate_hi",
         translation_key="rain_rate_hi",
-        native_unit_of_measurement=UnitOfLength.INCHES,
+        native_unit_of_measurement=UnitOfVolumetricFlux.INCHES_PER_HOUR,
         device_class=SensorDeviceClass.PRECIPITATION,
     ),
     SensorEntityDescription(
@@ -199,7 +200,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="rain_rate_hi_last_15_min",
         translation_key="rain_rate_hi_last_15_min",
-        native_unit_of_measurement=UnitOfLength.INCHES,
+        native_unit_of_measurement=UnitOfVolumetricFlux.INCHES_PER_HOUR,
         device_class=SensorDeviceClass.PRECIPITATION,
     ),
     SensorEntityDescription(
