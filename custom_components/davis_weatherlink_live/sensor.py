@@ -1,17 +1,44 @@
+"""Sensor platform for Davis WeatherLink Live integration."""
+
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription, SensorDeviceClass
-from homeassistant.const import UnitOfTemperature, PERCENTAGE, UnitOfPressure, UnitOfSpeed, UnitOfLength, DEGREE
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.helpers.entity import EntityCategory
-from .const import DOMAIN
-
-from .coordinator import WeatherCoordinator
-from . import MyConfigEntry
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.const import (
+    DEGREE,
+    PERCENTAGE,
+    UnitOfLength,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from . import MyConfigEntry
+from .const import DOMAIN
+from .coordinator import WeatherCoordinator
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="lsid",
+        name="ISS Logical Sensor ID",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_visible_default=False,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="txid",
+        name="ISS Transmitter ID",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_visible_default=False,
+        entity_registry_enabled_default=False,
+    ),
     SensorEntityDescription(
         key="temp",
         name="Temperature",
@@ -37,10 +64,30 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
+        key="heat_index",
+        name="Heat Index",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key="wind_chill",
+        name="Wind Chill",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    SensorEntityDescription(
         key="thw_index",
         name="THW Index",
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key="thsw_index",
+        name="THSW Index",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_registry_visible_default=False,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="wind_speed_last",
@@ -178,6 +225,18 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     SensorEntityDescription(
+        key="solar_rad",
+        name="Solar Radiation",
+        entity_registry_visible_default=False,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="uv_index",
+        name="UV Index",
+        entity_registry_visible_default=False,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
         key="rx_state",
         name="ISS RX Status",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -265,8 +324,13 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: MyConfigEntry, async_add_entities: AddEntitiesCallback): #(hass, entry, async_add_entities):
-    #coordinator = hass.data[DOMAIN][entry.entry_id]
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: MyConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+):  # (hass, entry, async_add_entities):
+    # coordinator = hass.data[DOMAIN][entry.entry_id]
 
     # This gets the data update coordinator from the config entry runtime data as specified in your __init__.py
     coordinator: WeatherCoordinator = config_entry.runtime_data.coordinator
@@ -274,14 +338,21 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: MyConfigEntry, as
     # Create a unique device ID based on the integration entry ID
     device_id = config_entry.entry_id
 
-    sensors = [WeatherSensor(coordinator, description, device_id) for description in SENSOR_TYPES]
+    sensors = [
+        WeatherSensor(coordinator, description, device_id)
+        for description in SENSOR_TYPES
+    ]
     async_add_entities(sensors)
 
+
 class WeatherSensor(CoordinatorEntity, SensorEntity):
+    _attr_has_entity_name = (
+        True  # Allows entity names to be customized as sensor.deviceName_descriptionKey
+    )
 
-    _attr_has_entity_name = True # Allows entity names to be customized as sensor.deviceName_descriptionKey 
-
-    def __init__(self, coordinator, description: SensorEntityDescription, device_id: str):
+    def __init__(
+        self, coordinator, description: SensorEntityDescription, device_id: str
+    ):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{description.key}"

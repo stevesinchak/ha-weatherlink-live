@@ -1,22 +1,16 @@
-"""DataUpdateCoordinator for our integration."""
+"""DataUpdateCoordinator for Davis WeatherLink Live integration."""
 
-from datetime import timedelta
 import logging
+from datetime import timedelta
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
-)
 from homeassistant.core import DOMAIN, HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .davis_weatherlink_live import DavisWeatherLinkLive
-
 from .const import DOMAIN
+from .davis_weatherlink_live import DavisWeatherLinkLive
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,13 +24,19 @@ class WeatherCoordinator(DataUpdateCoordinator):
         """Initialize coordinator."""
 
         # Set variables from values entered in config flow and option flow setup
-        self.api_host = config_entry.options.get("api_host") #,config_entry.data["api_host"])
-        self.api_path = config_entry.options.get("api_path") #,config_entry.data["api_path"])
-        self.api_update_interval = config_entry.options.get("update_interval") #,config_entry.data["update_interval"])
+        self.api_host = config_entry.options.get(
+            "api_host"
+        )  # ,config_entry.data["api_host"])
+        self.api_path = config_entry.options.get(
+            "api_path"
+        )  # ,config_entry.data["api_path"])
+        self.api_update_interval = config_entry.options.get(
+            "update_interval"
+        )  # ,config_entry.data["update_interval"])
 
-        _LOGGER.info("API Host: %s", self.api_host)
-        _LOGGER.info("API Path: %s", self.api_path)
-        _LOGGER.info("Update Interval: %s", self.api_update_interval)
+        _LOGGER.debug("API Host: %s", self.api_host)
+        _LOGGER.debug("API Path: %s", self.api_path)
+        _LOGGER.debug("Update Interval: %s", self.api_update_interval)
 
         # Initialise DataUpdateCoordinator
         super().__init__(
@@ -52,13 +52,15 @@ class WeatherCoordinator(DataUpdateCoordinator):
         )
 
         wll_url = "http://" + self.api_host + self.api_path
-        _LOGGER.info("WeatherLink Live URL %s", wll_url)
-    
-        # Create an instance of the API using the provided URL
-        self.wll_local = DavisWeatherLinkLive(wll_url)
-        
+        _LOGGER.debug("WeatherLink Live URL %s", wll_url)
+
+        # Create an instance of the API using the provided URL and pass in websession for API object to use
+        self.wll_local = DavisWeatherLinkLive(
+            wll_url, async_get_clientsession(hass)
+        )  # @config_entry.runtime_data.websession)
+
         # Initialise your api here and make available to your integration.
-        #self.api = API(host=self.host, user=self.user, pwd=self.pwd, mock=True)
+        # self.api = API(host=self.host, user=self.user, pwd=self.pwd, mock=True)
 
     async def async_update_data(self):
         """Fetch data from API endpoint.
@@ -71,16 +73,16 @@ class WeatherCoordinator(DataUpdateCoordinator):
             # ----------------------------------------------------------------------------
             # Get the data from your api
             # ----------------------------------------------------------------------------
-            data = await self.hass.async_add_executor_job(self.wll_local.get_weather_data)
 
-        except APIConnectionError as err:
-            _LOGGER.error(err)
-            raise UpdateFailed(err) from err
+            # Old Requests based method
+            # data = await self.hass.async_add_executor_job(self.wll_local.get_weather_data)
+
+            # New injected websession based method
+            data = await self.wll_local.get_weather_data()
+
         except Exception as err:
             # This will show entities as unavailable by raising UpdateFailed exception
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
         # What is returned here is stored in self.data by the DataUpdateCoordinator
         return data
-
-    

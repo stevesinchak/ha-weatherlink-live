@@ -12,9 +12,13 @@
                     "api_path": "API endpoint on your WeatherLink Live device",
                     "update_interval": "Amount of time between sensor updates in seconds"
                 }
-                
+                                 
             }
-        }
+        },
+        "error": {
+                    "api_host_http_not_allowed": "Enter only the hostname or IP address, no 'http' or 'https'",
+                    "update_interval_too_low": "The WeatherLink Live API endpoint is updated every 10 seconds, shorter intervals will duplicate data and waste storage!"
+     }  
     },
     "options": {
         "step": {
@@ -28,9 +32,12 @@
                     "api_host": "Host or IP Address of your WeatherLink Live device",
                     "api_path": "API endpoint on your WeatherLink Live device",
                     "update_interval": "Amount of time between sensor updates in seconds"
-                }
-                
+                }         
             }
-        }
+        },
+        "error": {
+            "api_host_http_not_allowed": "Enter only the hostname or IP address, no 'http' or 'https'",
+            "update_interval_too_low": "The WeatherLink Live API endpoint is updated every 10 seconds, shorter intervals will duplicate data and waste storage!"
+        }  
     }
 }

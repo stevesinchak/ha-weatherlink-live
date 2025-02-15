@@ -11,20 +11,20 @@ Things you need to change
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 from .coordinator import WeatherCoordinator
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,14 +89,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: MyConfigEntry) ->
     # Add the coordinator and update listener to your config entry to make
     # accessible throughout your integration
     # ----------------------------------------------------------------------------
-    config_entry.runtime_data = RuntimeData(coordinator, cancel_update_listener)
+    # plus inject the websession to the runtime data
+    config_entry.runtime_data = RuntimeData(
+        coordinator, cancel_update_listener, async_get_clientsession(hass)
+    )
 
     # ----------------------------------------------------------------------------
     # Setup platforms (based on the list of entity types in PLATFORMS defined above)
     # This calls the async_setup method in each of your entity type files.
     # ----------------------------------------------------------------------------
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
 
     # Return true to denote a successful setup.
     return True
@@ -139,14 +141,18 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: MyConfigEntry) -
         hass.services.async_remove(DOMAIN, service)
 
     # Unload platforms and return result
-    #return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
-    
-    #oldie but goodie
-    unload_ok = await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
-    
+    # return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+
+    # oldie but goodie
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
+
     # Remove stored data if unloading was successful
     if unload_ok:
-        coordinator = config_entry.runtime_data.coordinator #hass.data[DOMAIN].pop(config_entry.entry_id, None)
+        coordinator = (
+            config_entry.runtime_data.coordinator
+        )  # hass.data[DOMAIN].pop(config_entry.entry_id, None)
         if coordinator:
             await coordinator.async_shutdown()  # Ensure background updates stop
 

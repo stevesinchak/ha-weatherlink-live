@@ -10,25 +10,24 @@
 
 This custom integration for [Home Assistant](https://www.home-assistant.io/) provides direct local access to the [Davis WeatherLink Live](https://www.davisinstruments.com/products/weatherlink-live) device on your home network for cloud-free access to all of your weather station sensors.
 
-The integration polls the [local API](https://weatherlink.github.io/weatherlink-live-local-api/) on the [Davis WeatherLink Live](https://www.davisinstruments.com/products/weatherlink-live) (at a user configurable interval) and exposes 43 sensors to Home Assistant for use on dashboards and automations: 
+The integration polls the [local API](https://weatherlink.github.io/weatherlink-live-local-api/) on the [Davis WeatherLink Live](https://www.davisinstruments.com/products/weatherlink-live) (at a user configurable interval) and exposes 50 sensors to Home Assistant for use on dashboards and automations (not all enabled by default): 
 
-| Standard               | Rain                   | Wind                                |
-|------------------------|------------------------|-------------------------------------|
-| Temperature            | Rain Rate Latest       | Bar Absolute Pressure               |
-| Humidity               | Rain Rate Last 15 Min  | Bar Sea Level Pressure              |
-| Dew Point              | Rain Rate High         | Bar Trend Pressure                  |
-| THW Index              | Rainfall Storm         | Wind Speed Avg Last 10 Min          |
-| Wet Bulb               | Rain Storm At          | Wind Direction                      |
-| Bar Absolute Pressure  | Rain Storm Start       | Wind Direction Rose                 |
-| Bar Sea Level Pressure | Rain Storm End         | Wind Direction Avg Last Min         |
-| Bar Trend Pressure     | Rainfall Last 15 Min   | Wind Direction Avg Last 2 Min       |
-| Indoor Temperature     | Rainfall Last 24 Hours | Wind Direction Avg Last 10 Min      |
-| Indoor Humidity        | Rainfall Last Hour     | Wind Direction Avg Last 10 Min Rose |
-| Indoor Heat Index      | Rainfall Last Storm    | Wind Gust Last 2 Min                |
-| Indoor Dew Point       | Rainfall Day           | Wind Gust Direction Last 2 Min      |
-| ISS Battery Low        | Rainfall Month         | Wind Gust Last 10 Min               |
-| ISS RX Status          | Rainfall Year          | Wind Gust Direction Last 10 Min     |
-|                        | Rain Cup Size          |                                     |
+| Standard           | Rain                   | Wind                                | Pressure & Diagnostic  |
+|--------------------|------------------------|-------------------------------------|------------------------|
+| Temperature        | Rain Rate Latest       | Wind Speed                          | Bar Sea Level Pressure |
+| Humidity           | Rain Rate High         | Wind Direction                      | Bar Trend Pressure     |
+| Dew Point          | Rainfall Last 15 Min   | Wind Direction Rose                 | Bar Absolute Pressure  |
+| Wet Bulb           | Rain Rate Last 15 Min  | Wind Speed Avg Last Min             | ISS Logical Sensor ID  |
+| Heat Index         | Rainfall Last Hour     | Wind Direction Avg Last Min         | ISS Transmitter ID     |
+| Wind Chill         | Rainfall Last 24 Hours | Wind Speed Avg Last 2 Min           | ISS RX Status          |
+| THW Index          | Rainfall Storm         | Wind Direction Avg Last 2 Min       | ISS Battery Low        |
+| THSW Index         | Rain Storm At          | Wind Gust Last 2 Min                | Rain Cup Size          |
+| Solar Radiation    | Rainfall Day           | Wind Gust Direction Last 2 Min      |                        |
+| UV Index           | Rainfall Month         | Wind Speed Avg Last 10 Min          |                        |
+| Indoor Temperature | Rainfall Year          | Wind Direction Avg Last 10 Min      |                        |
+| Indoor Humidity    | Rainfall Last Storm    | Wind Direction Avg Last 10 Min Rose |                        |
+| Indoor Dew Point   | Rain Storm Start       | Wind Gust Last 10 Min               |                        |
+| Indoor Heat Index  | Rain Storm End         | Wind Gust Direction Last 10 Min     |                        |
 
 ## Installation
 
@@ -112,14 +111,14 @@ This integrations fully supports all capabilities of the Davis WeatherLink Live 
 
 #### Silver
 - [ ] `action-exceptions` - Service actions raise exceptions when encountering failures
-- [ ] `config-entry-unloading` - Support config entry unloading
+- [x] `config-entry-unloading` - Support config entry unloading
 - [x] `docs-configuration-parameters` - The documentation describes all integration configuration options
 - [x] `docs-installation-parameters` - The documentation describes all integration installation parameters
 - [ ] `entity-unavailable` - Mark entity unavailable if appropriate
 - [x] `integration-owner` - Has an integration owner
 - [ ] `log-when-unavailable` - If internet/device/service is unavailable, log once when unavailable and once when back connected
 - [ ] `parallel-updates` - Set Parallel updates
-- [n/a] `reauthentication-flow` - Reauthentication flow
+- (N/A no auth) `reauthentication-flow` - Reauthentication flow
 - [ ] `test-coverage` - Above 95% test coverage for all integration modules
 
 #### Gold
@@ -146,6 +145,6 @@ This integrations fully supports all capabilities of the Davis WeatherLink Live 
 - [n/a] `stale-devices` - Clean up stale devices
 
 #### Platinum
-- [ ] `async-dependency` - Dependency is async
-- [ ] `inject-websession` - The integration dependency supports passing in a websession
+- [x] `async-dependency` - Dependency is async
+- [x] `inject-websession` - The integration dependency supports passing in a websession
 - [ ] `strict-typing` - Strict typing
