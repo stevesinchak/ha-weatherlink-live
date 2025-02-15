@@ -1,13 +1,4 @@
-"""The Integration 101 Template integration.
-
-This shows how to use the requests library to get and use data from an external device over http and
-uses this data to create some binary sensors (of a generic type) and sensors (of multiple types).
-
-Things you need to change
-1. Change the api call in the coordinator async_update_data and the config flow validate input methods.
-2. The constants in const.py that define the api data parameters to set sensors for (and the sensor async_setup_entry logic)
-3. The specific sensor types to match your requirements.
-"""
+"""Davis WeatherLink Live integration by Steve Sinchak."""
 
 from __future__ import annotations
 
@@ -89,9 +80,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: MyConfigEntry) ->
     # Add the coordinator and update listener to your config entry to make
     # accessible throughout your integration
     # ----------------------------------------------------------------------------
-    # plus inject the websession to the runtime data
+
     config_entry.runtime_data = RuntimeData(
-        coordinator, cancel_update_listener, async_get_clientsession(hass)
+        coordinator, cancel_update_listener
     )
 
     # ----------------------------------------------------------------------------

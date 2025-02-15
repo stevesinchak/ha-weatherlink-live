@@ -176,6 +176,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Rain Cup Size",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_visible_default=False,
+        entity_registry_enabled_default=False,        
     ),
     SensorEntityDescription(
         key="rain_rate_last",
