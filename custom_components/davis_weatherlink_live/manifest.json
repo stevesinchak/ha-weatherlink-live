@@ -7,7 +7,7 @@
     "issue_tracker": "https://github.com/stevesinchak/ha-weatherlink-live/issues",
     "dependencies": [],
     "codeowners": ["@stevesinchak"],
-    "requirements": ["requests"],
+    "requirements": [],
     "iot_class": "local_polling",
     "zeroconf": [ "_weatherlinklive._tcp.local." ],
     "single_config_entry": true
