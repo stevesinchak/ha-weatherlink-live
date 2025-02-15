@@ -135,16 +135,16 @@ This integrations fully supports all capabilities of the Davis WeatherLink Live 
 - [x] `docs-supported-functions` - The documentation describes the supported functionality, including entities, and platforms
 - [x] `docs-troubleshooting` - The documentation provides troubleshooting information
 - [x] `docs-use-cases` - The documentation describes use cases to illustrate how this integration can be used
-- [n/a] `dynamic-devices` - Devices added after integration setup
+- N/A `dynamic-devices` - Devices added after integration setup
 - [x] `entity-category` - Entities are assigned an appropriate EntityCategory
 - [x] `entity-device-class` - Entities use device classes where possible
 - [x] `entity-disabled-by-default` - Integration disables less popular (or noisy) entities
-- [ ] `entity-translations` - Entities have translated names
+- [x] `entity-translations` - Entities have translated names
 - [ ] `exception-translations` - Exception messages are translatable
 - [ ] `icon-translations` - Icon translations
 - [x] `reconfiguration-flow` - Integrations should have a reconfigure flow
 - [ ] `repair-issues` - Repair issues and repair flows are used when user intervention is needed
-- [n/a] `stale-devices` - Clean up stale devices
+- N/A `stale-devices` - Clean up stale devices
 
 #### Platinum
 - [x] `async-dependency` - Dependency is async

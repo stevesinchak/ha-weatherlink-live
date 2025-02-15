@@ -1,4 +1,158 @@
 {
+    "entity": {
+        "sensor": {
+            "lsid": {
+                "name": "ISS Logical Sensor ID"
+            },
+            "txid": {
+                "name": "ISS Transmitter ID"
+            },
+            "temp": {
+                "name": "Temperature"
+            },
+            "hum": {
+                "name": "Humidity"
+            },
+            "dew_point": {
+                "name": "Dew Point"
+            },
+            "wet_bulb": {
+                "name": "Wet Bulb"
+            },
+            "heat_index": {
+                "name": "Heat Index"
+            },
+            "wind_chill": {
+                "name": "Wind Chill"
+            },
+            "thw_index": {
+                "name": "THW Index"
+            },
+            "thsw_index": {
+                "name": "THSW Index"
+            },
+            "wind_speed_last": {
+                "name": "Wind Speed"
+            },
+            "wind_dir_last": {
+                "name": "Wind Direction"
+            },
+            "wind_dir_last_rose": {
+                "name": "Wind Direction Rose"
+            },
+            "wind_speed_avg_last_1_min": {
+                "name": "Wind Speed Avg Last Min"
+            },
+            "wind_dir_scalar_avg_last_1_min": {
+                "name": "Wind Direction Avg Last Min"
+            },
+            "wind_speed_avg_last_2_min": {
+                "name": "Wind Speed Avg Last 2 Min"
+            },
+            "wind_dir_scalar_avg_last_2_min": {
+                "name": "Wind Direction Avg Last 2 Min"
+            },
+            "wind_speed_hi_last_2_min": {
+                "name": "Wind Gust Last 2 Min"
+            },
+            "wind_dir_at_hi_speed_last_2_min": {
+                "name": "Wind Gust Direction Last 2 Min"
+            },
+            "wind_speed_avg_last_10_min": {
+                "name": "Wind Speed Avg Last 10 Min"
+            },
+            "wind_dir_scalar_avg_last_10_min": {
+                "name": "Wind Direction Avg Last 10 Min"
+            },
+            "wind_dir_scalar_avg_last_10_min_rose": {
+                "name": "Wind Direction Avg Last 10 Min Rose"
+            },
+            "wind_speed_hi_last_10_min": {
+                "name": "Wind Gust Last 10 Min"
+            },
+            "wind_dir_at_hi_speed_last_10_min": {
+                "name": "Wind Gust Direction Last 10 Min"
+            },
+            "rain_size": {
+                "name": "Rain Cup Size"
+            },
+            "rain_rate_last": {
+                "name": "Rain Rate Latest"
+            },
+            "rain_rate_hi": {
+                "name": "Rain Rate High"
+            },
+            "rainfall_last_15_min": {
+                "name": "Rainfall Last 15 Min"
+            },
+            "rain_rate_hi_last_15_min": {
+                "name": "Rain Rate Last 15 Min"
+            },
+            "rainfall_last_60_min": {
+                "name": "Rainfall Last Hour"
+            },
+            "rainfall_last_24_hr": {
+                "name": "Rainfall Last 24 Hours"
+            },
+            "rain_storm": {
+                "name": "Rainfall Storm"
+            },
+            "rain_storm_start_at": {
+                "name": "Rain Storm At"
+            },
+            "solar_rad": {
+                "name": "Solar Radiation"
+            },
+            "uv_index": {
+                "name": "UV Index"
+            },
+            "rx_state": {
+                "name": "ISS RX Status"
+            },
+            "trans_battery_flag": {
+                "name": "ISS Battery Low"
+            },
+            "rainfall_daily": {
+                "name": "Rainfall Day"
+            },
+            "rainfall_monthly": {
+                "name": "Rainfall Month"
+            },
+            "rainfall_year": {
+                "name": "Rainfall Year"
+            },
+            "rain_storm_last": {
+                "name": "Rainfall Last Storm"
+            },
+            "rain_storm_last_start_at": {
+                "name": "Rain Storm Start"
+            },
+            "rain_storm_last_end_at": {
+                "name": "Rain Storm End"
+            },
+            "temp_in": {
+                "name": "Indoor Temperature"
+            },
+            "hum_in": {
+                "name": "Indoor Humidity"
+            },
+            "dew_point_in": {
+                "name": "Indoor Dew Point"
+            },
+            "heat_index_in": {
+                "name": "Indoor Heat Index"
+            },
+            "bar_sea_level": {
+                "name": "Bar Sea Level Pressure"
+            },
+            "bar_trend": {
+                "name": "Bar Trend Pressure"
+            },
+            "bar_absolute": {
+                "name": "Bar Absolute Pressure"
+            }
+        }
+    },
     "config": {
         "step": {
             "user": {
@@ -12,13 +166,12 @@
                     "api_path": "API endpoint on your WeatherLink Live device",
                     "update_interval": "Amount of time between sensor updates in seconds"
                 }
-                                 
             }
         },
         "error": {
-                    "api_host_http_not_allowed": "Enter only the hostname or IP address, no 'http' or 'https'",
-                    "update_interval_too_low": "The WeatherLink Live API endpoint is updated every 10 seconds, shorter intervals will duplicate data and waste storage!"
-     }  
+            "api_host_http_not_allowed": "Enter only the hostname or IP address, no 'http' or 'https'",
+            "update_interval_too_low": "The WeatherLink Live API endpoint is updated every 10 seconds, shorter intervals will duplicate data and waste storage!"
+        }
     },
     "options": {
         "step": {
@@ -32,12 +185,12 @@
                     "api_host": "Host or IP Address of your WeatherLink Live device",
                     "api_path": "API endpoint on your WeatherLink Live device",
                     "update_interval": "Amount of time between sensor updates in seconds"
-                }         
+                }
             }
         },
         "error": {
             "api_host_http_not_allowed": "Enter only the hostname or IP address, no 'http' or 'https'",
             "update_interval_too_low": "The WeatherLink Live API endpoint is updated every 10 seconds, shorter intervals will duplicate data and waste storage!"
-        }  
+        }
     }
 }
