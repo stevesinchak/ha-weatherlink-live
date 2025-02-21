@@ -75,6 +75,14 @@ class DavisWeatherLinkLive:
             if rain_amount is not None
             else None
         )
+    
+    @staticmethod
+    def zero_if_none(value: int | None) -> int:
+        return 0 if value is None else value
+    
+    @staticmethod
+    def zero_float_if_none(value: float | None) -> float:
+        return 0.0 if value is None else value
 
     def parse_weather_data(self, data: dict) -> dict:
         _LOGGER.debug("Parsing weather data: %s", data)
@@ -166,11 +174,11 @@ class DavisWeatherLinkLive:
                         "wind_dir_scalar_avg_last_2_min": condition.get(
                             "wind_dir_scalar_avg_last_2_min"
                         ),
-                        "wind_speed_hi_last_2_min": condition.get(
-                            "wind_speed_hi_last_2_min"
+                        "wind_speed_hi_last_2_min": DavisWeatherLinkLive.zero_float_if_none(
+                            condition.get("wind_speed_hi_last_2_min") #bug in API sometimes throws a null when zero wind
                         ),
-                        "wind_dir_at_hi_speed_last_2_min": condition.get(
-                            "wind_dir_at_hi_speed_last_2_min"
+                        "wind_dir_at_hi_speed_last_2_min": DavisWeatherLinkLive.zero_if_none(
+                            condition.get("wind_dir_at_hi_speed_last_2_min") #bug in API sometimes throws a null when zero wind
                         ),
                         "wind_speed_avg_last_10_min": condition.get(
                             "wind_speed_avg_last_10_min"
