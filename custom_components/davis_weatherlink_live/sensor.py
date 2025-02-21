@@ -183,13 +183,13 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="rain_rate_last",
         translation_key="rain_rate_last",
         native_unit_of_measurement=UnitOfVolumetricFlux.INCHES_PER_HOUR,
-        device_class=SensorDeviceClass.PRECIPITATION,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
     ),
     SensorEntityDescription(
         key="rain_rate_hi",
         translation_key="rain_rate_hi",
         native_unit_of_measurement=UnitOfVolumetricFlux.INCHES_PER_HOUR,
-        device_class=SensorDeviceClass.PRECIPITATION,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
     ),
     SensorEntityDescription(
         key="rainfall_last_15_min",
@@ -201,7 +201,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="rain_rate_hi_last_15_min",
         translation_key="rain_rate_hi_last_15_min",
         native_unit_of_measurement=UnitOfVolumetricFlux.INCHES_PER_HOUR,
-        device_class=SensorDeviceClass.PRECIPITATION,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
     ),
     SensorEntityDescription(
         key="rainfall_last_60_min",
