@@ -117,7 +117,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="wind_dir_last_rose",
         translation_key="wind_dir_last_rose",
         icon="mdi:compass-outline",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="wind_speed_avg_last_1_min",
@@ -179,7 +178,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="wind_dir_scalar_avg_last_10_min_rose",
         translation_key="wind_dir_scalar_avg_last_10_min_rose",
         icon="mdi:compass-outline",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="wind_speed_hi_last_10_min",
