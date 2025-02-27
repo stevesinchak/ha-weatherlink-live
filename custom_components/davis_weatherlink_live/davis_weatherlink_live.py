@@ -68,13 +68,13 @@ class DavisWeatherLinkLive:
 
     # Rainfall amount calculation based on rain value depending on cup size of weather station
     @staticmethod
-    def calculate_rain_amount(rain_amount: int, rain_unit: int) -> float | None:
+    def calculate_rain_amount(rain_amount: int, rain_unit: int) -> float:
+        if not isinstance(rain_amount, (int, float)) or rain_amount <= 0:
+            return 0.0
+        if not isinstance(rain_unit, (int, float)) or rain_unit <= 0:
+            return 0.0
         conversion_factors = {1: 0.01, 2: 0.2, 3: 0.1, 4: 0.001}
-        return (
-            rain_amount * conversion_factors.get(rain_unit, 0)
-            if rain_amount is not None
-            else None
-        )
+        return rain_amount * conversion_factors.get(rain_unit, 0)        
     
     @staticmethod
     def zero_if_none(value: int | None) -> int:
