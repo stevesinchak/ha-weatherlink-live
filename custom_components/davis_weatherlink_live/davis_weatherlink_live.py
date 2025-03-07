@@ -20,7 +20,7 @@ class DavisWeatherLinkLive:
 
     # POSIX / unix timestamp to datetime object
     @staticmethod
-    def unix_to_datetime(unix_timestamp: int) -> datetime | None:
+    def unix_to_datetime(unix_timestamp: int) -> datetime:
         try:
             return (
                 datetime.fromtimestamp(unix_timestamp, timezone.utc)
@@ -69,10 +69,14 @@ class DavisWeatherLinkLive:
     # Rainfall amount calculation based on rain value depending on cup size of weather station
     @staticmethod
     def calculate_rain_amount(rain_amount: int, rain_unit: int) -> float:
+        # Check for valid cup size indicator
+        if rain_unit not in range(1, 5):
+            raise ValueError("cup size indicator must be between 1 and 4") 
+        
+        # Check for valid rain amount as rain can't be negative or null
         if not isinstance(rain_amount, (int, float)) or rain_amount <= 0:
             return 0.0
-        if not isinstance(rain_unit, (int, float)) or rain_unit <= 0:
-            return 0.0
+        
         conversion_factors = {1: 0.01, 2: 0.2, 3: 0.1, 4: 0.001}
         return rain_amount * conversion_factors.get(rain_unit, 0)        
     
