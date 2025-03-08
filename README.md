@@ -43,9 +43,11 @@ The integration polls the [local API](https://weatherlink.github.io/weatherlink-
 
 1. If you have HACS ([Home Assistant Community Store](https://www.hacs.xyz/)) installed on your Home Assistant server, you can add this repo as a Custom Repository. Simply click on the three dots in the top right of the Home Assistant Community Store page, and select `Custom repositories`.
 
-2. Copy and paste in the URL of this repository `https://github.com/stevesinchak/ha-weatherlink-live` and set the Type to Integration and hit Add. 
+2. Copy and paste in the URL of this repository `https://github.com/stevesinchak/ha-weatherlink-live` and set the Type to `Integration` and hit Add. 
 
-3. Then just search for Davis WeatherLink LIve and click on the listing.  Scroll down and hit Download to install.  Reboot your Home Assitant server and you are ready to configure.
+3. Then just search for `Davis WeatherLink Live` and click on the listing.  Scroll down and hit Download to install.  
+
+4.Reboot your Home Assistant server and you are ready to configure.
 
 
 ## Configuration
