@@ -111,6 +111,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         translation_key="wind_dir_last",
         native_unit_of_measurement=DEGREE,
         icon="mdi:compass-outline",
+        device_class=SensorDeviceClass.WIND_DIRECTION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -130,6 +131,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         translation_key="wind_dir_scalar_avg_last_1_min",
         native_unit_of_measurement=DEGREE,
         icon="mdi:compass-outline",
+        device_class=SensorDeviceClass.WIND_DIRECTION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -144,6 +146,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         translation_key="wind_dir_scalar_avg_last_2_min",
         native_unit_of_measurement=DEGREE,
         icon="mdi:compass-outline",
+        device_class=SensorDeviceClass.WIND_DIRECTION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -158,6 +161,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         translation_key="wind_dir_at_hi_speed_last_2_min",
         native_unit_of_measurement=DEGREE,
         icon="mdi:compass-outline",
+        device_class=SensorDeviceClass.WIND_DIRECTION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -172,6 +176,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         translation_key="wind_dir_scalar_avg_last_10_min",
         native_unit_of_measurement=DEGREE,
         icon="mdi:compass-outline",
+        device_class=SensorDeviceClass.WIND_DIRECTION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -191,6 +196,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         translation_key="wind_dir_at_hi_speed_last_10_min",
         native_unit_of_measurement=DEGREE,
         icon="mdi:compass-outline",
+        device_class=SensorDeviceClass.WIND_DIRECTION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
