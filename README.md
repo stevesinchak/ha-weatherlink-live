@@ -33,32 +33,36 @@ The integration polls the [local API](https://weatherlink.github.io/weatherlink-
 
 ## Installation
 
-**Install Option A:**
+**Install Option A: Manual Copy**
 
 1. Copy the entire `davis_weatherlink_live` directory from this repository into the `custom_components` directory on your Home Assistant installation. `custom_components` is nested within the base Home Assistant `config` directory, if it does not exist, you can create it. Tip: Use the [Studio Code Server](https://github.com/hassio-addons/addon-vscode/blob/main/vscode/DOCS.md) add-on for an easy way to navigate the file system and upload files.
 
 2. Restart Home Assistant so the custom integration is recognized. 
 
-3. There are two methods to add/enable the integration: 
+**Install Option B: HACS Store**
+
+1. If you have HACS (Home Assistant Community Store) installed on your Home Assistant server, you can add this repo as a Custom Repository. Simply click on the three dots in the top right of the Home Assistant Community Store page, and select `Custom repositories`.
+
+2. Copy and paste in the URL of this repository `https://github.com/stevesinchak/ha-weatherlink-live` and set the Type to Integration and hit Add. 
+
+3. Then just search for Davis WeatherLink LIve and click on the listing.  Scroll down and hit Download to install.  Reboot your Home Assitant server and you are ready to configure.
+
+
+## Configuration
+
+- There are two methods to add/enable the integration: 
 
     * Auto Discovery: If the WeatherLink Live is on the same network as your Home Assistant Server, the device should be auto-detected (thanks to Zeroconf) within a few minutes and will be listed under the Discoverd section. Go to your [Home Assistant Integrations dashboard](https://my.home-assistant.io/redirect/integrations/) and hit the Add button and jump to step 4. 
 
     * Manual Add: Click this link to manually add the integration.  
 
-4. Depending on how the integration was added in the previous step, all fields may be pre-populated.  There are three fields total:
+- Depending on how the integration was added in the previous step, all fields may be pre-populated.  There are three fields total:
 
     * API Host: The ip address or hostname of your Davis WeatherLink Live
 
     * API Path: Path to the API Endpoint (leave at the default unless this changes in a future device firmware update)
 
     * Update Interval: How frequently you want the integration to capture new data measured in seconds.  I set mine to 10 seconds as I like to capture detailed wind data. In other cases a simple 5 minute interval, 300 seconds, is sufficient. **Note:** *The Davis WeatherLink Live only updates the API every 10 seconds so intervals lower than 10 may result in errors and/or duplicate data.*
-
-**Install Option B:**
-
-*Install via HACS (Coming Soon)*
-
-
-## Configuration
 
 At any point you can update the configuration you specified while adding the integration by simply going to the [Davis WeatherLink Live 6100](https://my.home-assistant.io/redirect/integration/?domain=davis_weatherlink_live) page and hitting the `CONFIGURE` button. This is helpful if you would like to adjust the Update Interval.  
 

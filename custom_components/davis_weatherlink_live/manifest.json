@@ -1,14 +1,14 @@
 {
     "domain": "davis_weatherlink_live",
     "name": "Davis WeatherLink Live 6100",
-    "version": "1.2.3",
-    "config_flow": true,
-    "documentation": "https://github.com/stevesinchak/ha-weatherlink-live",
-    "issue_tracker": "https://github.com/stevesinchak/ha-weatherlink-live/issues",
-    "dependencies": [],
     "codeowners": ["@stevesinchak"],
-    "requirements": [],
+    "config_flow": true,
+    "dependencies": [],
+    "documentation": "https://github.com/stevesinchak/ha-weatherlink-live",
     "iot_class": "local_polling",
-    "zeroconf": [ "_weatherlinklive._tcp.local." ],
-    "single_config_entry": true
+    "issue_tracker": "https://github.com/stevesinchak/ha-weatherlink-live/issues",
+    "requirements": [],
+    "single_config_entry": true,
+    "version": "1.2.3",
+    "zeroconf": [ "_weatherlinklive._tcp.local." ]
   }
