@@ -47,18 +47,18 @@ The integration polls the [local API](https://weatherlink.github.io/weatherlink-
 
 3. Then just search for `Davis WeatherLink Live` and click on the listing.  Scroll down and hit Download to install.  
 
-4.Reboot your Home Assistant server and you are ready to configure.
+4. Reboot your Home Assistant server and you are ready to configure.
 
 
 ## Configuration
 
-- There are two methods to add/enable the integration: 
+1. There are two methods to add/enable the integration: 
 
     * Auto Discovery: If the WeatherLink Live is on the same network as your Home Assistant Server, the device should be auto-detected (thanks to Zeroconf) within a few minutes and will be listed under the Discoverd section. Go to your [Home Assistant Integrations dashboard](https://my.home-assistant.io/redirect/integrations/) and hit the Add button and jump to step 4. 
 
     * Manual Add: Click this link to manually add the integration.  
 
-- Depending on how the integration was added in the previous step, all fields may be pre-populated.  There are three fields total:
+2. Depending on how the integration was added in the previous step, all fields may be pre-populated.  There are three fields total:
 
     * API Host: The ip address or hostname of your Davis WeatherLink Live
 
