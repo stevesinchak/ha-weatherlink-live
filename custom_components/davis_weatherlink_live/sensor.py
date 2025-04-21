@@ -26,6 +26,11 @@ from . import MyConfigEntry
 from .const import DOMAIN
 from .coordinator import WeatherCoordinator
 
+import logging
+
+_LOGGER = logging.getLogger(__name__)
+
+
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="lsid",
@@ -207,51 +212,58 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
+        key="rain_size_desc",
+        translation_key="rain_size_desc",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_visible_default=False,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
         key="rain_rate_last",
         translation_key="rain_rate_last",
-        native_unit_of_measurement=UnitOfVolumetricFlux.INCHES_PER_HOUR,
+        # native_unit_of_measurement=UnitOfVolumetricFlux.INCHES_PER_HOUR,
         device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="rain_rate_hi",
         translation_key="rain_rate_hi",
-        native_unit_of_measurement=UnitOfVolumetricFlux.INCHES_PER_HOUR,
+        # native_unit_of_measurement=UnitOfVolumetricFlux.INCHES_PER_HOUR,
         device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="rainfall_last_15_min",
         translation_key="rainfall_last_15_min",
-        native_unit_of_measurement=UnitOfLength.INCHES,
+        # native_unit_of_measurement=UnitOfLength.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="rain_rate_hi_last_15_min",
         translation_key="rain_rate_hi_last_15_min",
-        native_unit_of_measurement=UnitOfVolumetricFlux.INCHES_PER_HOUR,
+        # native_unit_of_measurement=UnitOfVolumetricFlux.INCHES_PER_HOUR,
         device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="rainfall_last_60_min",
         translation_key="rainfall_last_60_min",
-        native_unit_of_measurement=UnitOfLength.INCHES,
+        # native_unit_of_measurement=UnitOfLength.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="rainfall_last_24_hr",
         translation_key="rainfall_last_24_hr",
-        native_unit_of_measurement=UnitOfLength.INCHES,
+        # native_unit_of_measurement=UnitOfLength.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="rain_storm",
         translation_key="rain_storm",
-        native_unit_of_measurement=UnitOfLength.INCHES,
+        # native_unit_of_measurement=UnitOfLength.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -287,28 +299,28 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="rainfall_daily",
         translation_key="rainfall_daily",
-        native_unit_of_measurement=UnitOfLength.INCHES,
+        # native_unit_of_measurement=UnitOfLength.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key="rainfall_monthly",
         translation_key="rainfall_monthly",
-        native_unit_of_measurement=UnitOfLength.INCHES,
+        # native_unit_of_measurement=UnitOfLength.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key="rainfall_year",
         translation_key="rainfall_year",
-        native_unit_of_measurement=UnitOfLength.INCHES,
+        # native_unit_of_measurement=UnitOfLength.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key="rain_storm_last",
         translation_key="rain_storm_last",
-        native_unit_of_measurement=UnitOfLength.INCHES,
+        # native_unit_of_measurement=UnitOfLength.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.TOTAL,
     ),
@@ -372,6 +384,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: MyConfigEntry,
@@ -408,6 +421,63 @@ class WeatherSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self):
         return self.coordinator.data.get(self.entity_description.key)
+
+    @property
+    def native_unit_of_measurement(self):
+        if self.entity_description.key in [
+            "rain_rate_last",
+            "rain_rate_hi",
+            "rain_rate_hi_last_15_min",
+        ]:
+            api_rain_size_value = self.coordinator.data.get("rain_size")
+            # API DOC: rain collector size/type **(0: Reserved, 1: 0.01", 2: 0.2 mm, 3: 0.1 mm, 4: 0.001")**
+
+            _LOGGER.debug(
+                "Parsing rain size value to identify correct units: %s",
+                api_rain_size_value,
+            )
+
+            match api_rain_size_value:
+                case 0:
+                    return None
+                case 1:
+                    return UnitOfVolumetricFlux.INCHES_PER_HOUR
+                case 2:
+                    return UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR
+                case 3:
+                    return UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR
+                case 4:
+                    return UnitOfVolumetricFlux.INCHES_PER_HOUR
+                case _:
+                    return None
+
+        elif self.entity_description.key in [
+            "rainfall_last_15_min",
+            "rainfall_last_60_min",
+            "rainfall_last_24_hr",
+            "rain_storm",
+            "rainfall_daily",
+            "rainfall_monthly",
+            "rainfall_year",
+            "rain_storm_last",
+        ]:
+            api_rain_size_value = self.coordinator.data.get("rain_size")
+
+            match api_rain_size_value:
+                case 0:
+                    return None
+                case 1:
+                    return UnitOfLength.INCHES
+                case 2:
+                    return UnitOfLength.MILLIMETERS
+                case 3:
+                    return UnitOfLength.MILLIMETERS
+                case 4:
+                    return UnitOfLength.INCHES
+                case _:
+                    return None
+
+        return self.entity_description.native_unit_of_measurement
 
     @property
     def device_info(self):

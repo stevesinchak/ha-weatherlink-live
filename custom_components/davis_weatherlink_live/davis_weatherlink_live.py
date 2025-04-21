@@ -199,7 +199,10 @@ class DavisWeatherLinkLive:
                         "wind_dir_at_hi_speed_last_10_min": condition.get(
                             "wind_dir_at_hi_speed_last_10_min"
                         ),
-                        "rain_size": DavisWeatherLinkLive.rain_size_description(
+                        "rain_size": condition.get(
+                            "rain_size"
+                        ),
+                        "rain_size_desc": DavisWeatherLinkLive.rain_size_description(
                             condition.get("rain_size")
                         ),
                         "rain_rate_last": DavisWeatherLinkLive.calculate_rain_amount(
