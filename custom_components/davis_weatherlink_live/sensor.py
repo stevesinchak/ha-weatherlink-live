@@ -16,6 +16,7 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfVolumetricFlux,
+    UnitOfIrradiance,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -275,6 +276,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="solar_rad",
         translation_key="solar_rad",
+        native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
         entity_registry_visible_default=False,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
