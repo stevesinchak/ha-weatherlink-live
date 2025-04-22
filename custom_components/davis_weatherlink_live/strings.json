@@ -76,6 +76,9 @@
             "rain_size": {
                 "name": "Rain Cup Size"
             },
+            "rain_size_desc": {
+                "name": "Rain Cup Size Description"
+            },
             "rain_rate_last": {
                 "name": "Rain Rate Latest"
             },
