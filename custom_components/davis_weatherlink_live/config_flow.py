@@ -16,7 +16,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import callback
 
-from .const import API_INITIAL_INTERVAL, API_PATH, DOMAIN
+from .const import API_INITIAL_INTERVAL, API_PATH, DOMAIN, API_TRANSMITTER_COMBINE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,6 +88,7 @@ class WeatherStationConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Required(
                     "update_interval", default=API_INITIAL_INTERVAL
                 ): cv.positive_int,
+                vol.Required("api_transmitter_combine", default=API_TRANSMITTER_COMBINE): cv.boolean,
             }
         )
 
@@ -99,6 +100,7 @@ class WeatherStationConfigFlow(ConfigFlow, domain=DOMAIN):
                 "api_host": "The hostname or IP address of the WeatherLink Live device.",
                 "api_path": "The API path for accessing the WeatherLink Live data.",
                 "update_interval": "The interval (in seconds) at which data should be updated.",
+                "api_transmitter_combine": "Helpful when temperature, rain, and/or wind are measured by separate sensor units",
             },
         )
 
@@ -143,6 +145,12 @@ class WeatherStationOptionsFlow(OptionsFlowWithConfigEntry):
                         "update_interval", API_INITIAL_INTERVAL
                     ),
                 ): cv.positive_int,
+                vol.Required(
+                    "api_transmitter_combine",
+                     default=self.config_entry.options.get(
+                        "api_transmitter_combine", API_TRANSMITTER_COMBINE
+                     ),
+                ): cv.boolean,
             }
         )
 
@@ -151,8 +159,9 @@ class WeatherStationOptionsFlow(OptionsFlowWithConfigEntry):
             data_schema=data_schema,
             errors=errors,
             description_placeholders={
-                "api_host": "The hostname or IP address of the WeatherLink Live device.",
-                "api_path": "The API path for accessing the WeatherLink Live data.",
-                "update_interval": "The interval (in seconds) at which data should be updated.",
+                "api_host": "The hostname or IP address of the WeatherLink Live device",
+                "api_path": "The API path for accessing the WeatherLink Live data",
+                "update_interval": "The interval (in seconds) at which data should be updated",
+                "api_transmitter_combine": "Helpful when temperature, rain, and/or wind are measured by separate sensor units",
             },
         )

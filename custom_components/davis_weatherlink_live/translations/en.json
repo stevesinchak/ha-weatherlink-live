@@ -162,12 +162,14 @@
                 "data": {
                     "api_host": "Hostname or IP Address",
                     "api_path": "API Path",
-                    "update_interval": "Update Interval"
+                    "update_interval": "Update Interval",
+                    "api_transmitter_combine": "Combine data from multiple sensor transmitters"
                 },
                 "data_description": {
                     "api_host": "Host or IP Address of your WeatherLink Live device",
                     "api_path": "API endpoint on your WeatherLink Live device",
-                    "update_interval": "Amount of time between sensor updates in seconds"
+                    "update_interval": "Amount of time between sensor updates in seconds",
+                    "api_transmitter_combine": "Helpful when temperature, rain, and/or wind are measured by separate sensor units"
                 }
             }
         },
@@ -182,12 +184,14 @@
                 "data": {
                     "api_host": "Hostname or IP Address",
                     "api_path": "API Path",
-                    "update_interval": "Update Interval"
+                    "update_interval": "Update Interval",
+                    "api_transmitter_combine": "Combine data from multiple sensor transmitters"
                 },
                 "data_description": {
                     "api_host": "Host or IP Address of your WeatherLink Live device",
                     "api_path": "API endpoint on your WeatherLink Live device",
-                    "update_interval": "Amount of time between sensor updates in seconds"
+                    "update_interval": "Amount of time between sensor updates in seconds",
+                    "api_transmitter_combine": "Helpful when temperature, rain, and/or wind are measured by separate sensor units"
                 }
             }
         },

@@ -33,10 +33,14 @@ class WeatherCoordinator(DataUpdateCoordinator):
         self.api_update_interval = config_entry.options.get(
             "update_interval"
         )  # ,config_entry.data["update_interval"])
+        self.api_transmitter_combine = config_entry.options.get(
+            "api_transmitter_combine"
+        )
 
         _LOGGER.debug("API Host: %s", self.api_host)
         _LOGGER.debug("API Path: %s", self.api_path)
         _LOGGER.debug("Update Interval: %s", self.api_update_interval)
+        _LOGGER.debug("Transmitter Combine: %s", self.api_transmitter_combine)
 
         # Initialise DataUpdateCoordinator
         super().__init__(
@@ -56,7 +60,8 @@ class WeatherCoordinator(DataUpdateCoordinator):
 
         # Create an instance of the API using the provided URL and pass in websession for API object to use
         self.wll_local = DavisWeatherLinkLive(
-            wll_url, async_get_clientsession(hass)
+            wll_url, async_get_clientsession(hass),
+             self.api_transmitter_combine
         )  # @config_entry.runtime_data.websession)
 
         # Initialise your api here and make available to your integration.
