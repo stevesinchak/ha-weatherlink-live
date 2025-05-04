@@ -66,6 +66,8 @@ The integration polls the [local API](https://weatherlink.github.io/weatherlink-
 
     * Update Interval: How frequently you want the integration to capture new data measured in seconds.  I set mine to 10 seconds as I like to capture detailed wind data. In other cases a simple 5 minute interval, 300 seconds, is sufficient. **Note:** *The Davis WeatherLink Live only updates the API every 10 seconds so intervals lower than 10 may result in errors and/or duplicate data.*
 
+    * Combine data from multiple sensor transmitters: Helpful when temperature, rain, and/or wind are measured by separate sensor units that transmit individually to the WeatherLink Live on different txid's.  This will combine the non-null data from all transmitters into a single entity. *Less common situation but useful for some users.*
+
 At any point you can update the configuration you specified while adding the integration by simply going to the [Davis WeatherLink Live 6100](https://my.home-assistant.io/redirect/integration/?domain=davis_weatherlink_live) page and hitting the `CONFIGURE` button. This is helpful if you would like to adjust the Update Interval.  
 
 ## Removal
