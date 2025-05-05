@@ -2,6 +2,7 @@
 .vscode
 
 xfer.sh
+xfer-dev.sh
 
 
 # Byte-compiled / optimized / DLL files
