@@ -153,6 +153,36 @@
             },
             "bar_absolute": {
                 "name": "Bar Absolute Pressure"
+            },
+            "soil_temp_1": {
+                "name": "Soil Temperature 1"
+            },
+            "soil_temp_2": {
+                "name": "Soil Temperature 2"
+            },
+            "soil_temp_3": {
+                "name": "Soil Temperature 3"
+            },
+            "soil_temp_4": {
+                "name": "Soil Temperature 4"
+            },
+            "moist_soil_1": {
+                "name": "Soil Moisture 1"
+            },
+            "moist_soil_2": {
+                "name": "Soil Moisture 2"
+            },
+            "moist_soil_3": {
+                "name": "Soil Moisture 3"
+            },
+            "moist_soil_4": {
+                "name": "Soil Moisture 4"
+            },
+            "wet_leaf_1": {
+                "name": "Leaf Wetness 1"
+            },
+            "wet_leaf_2": {
+                "name": "Leaf Wetness 2"
             }
         }
     },

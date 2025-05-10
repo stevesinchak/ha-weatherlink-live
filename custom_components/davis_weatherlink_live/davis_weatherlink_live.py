@@ -71,19 +71,19 @@ class DavisWeatherLinkLive:
     def calculate_rain_amount(rain_amount: int, rain_unit: int) -> float:
         # Check for valid cup size indicator
         if rain_unit not in range(1, 5):
-            raise ValueError("cup size indicator must be between 1 and 4") 
-        
+            raise ValueError("cup size indicator must be between 1 and 4")
+
         # Check for valid rain amount as rain can't be negative or null
         if not isinstance(rain_amount, (int, float)) or rain_amount <= 0:
             return 0.0
-        
+
         conversion_factors = {1: 0.01, 2: 0.2, 3: 0.1, 4: 0.001}
-        return rain_amount * conversion_factors.get(rain_unit, 0)        
-    
+        return rain_amount * conversion_factors.get(rain_unit, 0)
+
     @staticmethod
     def zero_if_none(value: int | None) -> int:
         return 0 if value is None else value
-    
+
     @staticmethod
     def zero_float_if_none(value: float | None) -> float:
         return 0.0 if value is None else value
@@ -91,196 +91,217 @@ class DavisWeatherLinkLive:
     def parse_weather_data(self, data: dict) -> dict:
         _LOGGER.debug("Parsing weather data: %s", data)
 
-        # Initialize values with None (to handle missing fields)
-        weather_data = {
-            "lsid": None,
-            "txid": None,
-            "temp": None,
-            "hum": None,
-            "dew_point": None,
-            "wet_bulb": None,
-            "heat_index": None,
-            "wind_chill": None,
-            "thw_index": None,
-            "thsw_index": None,
-            "wind_speed_last": None,
-            "wind_dir_last": None,
-            "wind_dir_last_rose": None,
-            "wind_speed_avg_last_1_min": None,
-            "wind_dir_scalar_avg_last_1_min": None,
-            "wind_speed_avg_last_2_min": None,
-            "wind_dir_scalar_avg_last_2_min": None,
-            "wind_speed_hi_last_2_min": None,
-            "wind_dir_at_hi_speed_last_2_min": None,
-            "wind_speed_avg_last_10_min": None,
-            "wind_dir_scalar_avg_last_10_min": None,
-            "wind_dir_scalar_avg_last_10_min_rose": None,
-            "wind_speed_hi_last_10_min": None,
-            "wind_dir_at_hi_speed_last_10_min": None,
-            "rain_size": None,
-            "rain_rate_last": None,
-            "rain_rate_hi": None,
-            "rainfall_last_15_min": None,
-            "rain_rate_hi_last_15_min": None,
-            "rainfall_last_60_min": None,
-            "rainfall_last_24_hr": None,
-            "rain_storm": None,
-            "rain_storm_start_at": None,
-            "solar_rad": None,
-            "uv_index": None,
-            "rx_state": None,
-            "trans_battery_flag": None,
-            "rainfall_daily": None,
-            "rainfall_monthly": None,
-            "rainfall_year": None,
-            "rain_storm_last": None,
-            "rain_storm_last_start_at": None,
-            "rain_storm_last_end_at": None,
-            "temp_in": None,
-            "hum_in": None,
-            "dew_point_in": None,
-            "heat_index_in": None,
-            "bar_sea_level": None,
-            "bar_trend": None,
-            "bar_absolute": None,
-        }
+        weather_data = {}
 
+        # Check if the API response is all wrong
+        if data.get("data", {}) is None:
+            _LOGGER.error("Davis API response missing data object: %s", data.get("error"))
+            return weather_data
+        elif data.get("data", {}).get("conditions") is None:
+            _LOGGER.error("Davis API response missing conditions object: %s", data.get("error"))
+            return weather_data
+
+        weather_data.update(
+            {
+                "raw_api": data,
+            }
+        )
         for condition in data.get("data", {}).get("conditions", []):
             data_type = condition.get("data_structure_type")
 
             if data_type == 1:  # ISS Current Conditions record (outside)
+                unique_key = f"_tx{condition.get('txid')}"
                 weather_data.update(
                     {
-                        "lsid": condition.get("lsid"),
-                        "txid": condition.get("txid"),
-                        "temp": condition.get("temp"),
-                        "hum": condition.get("hum"),
-                        "dew_point": condition.get("dew_point"),
-                        "wet_bulb": condition.get("wet_bulb"),
-                        "heat_index": condition.get("heat_index"),
-                        "wind_chill": condition.get("wind_chill"),
-                        "thw_index": condition.get("thw_index"),
-                        "thsw_index": condition.get("thsw_index"),
-                        "wind_speed_last": condition.get("wind_speed_last"),
-                        "wind_dir_last": condition.get("wind_dir_last"),
-                        "wind_dir_last_rose": DavisWeatherLinkLive.wind_dir_to_rose(
+                        "lsid" + unique_key: condition.get("lsid"),
+                        "txid" + unique_key: condition.get("txid"),
+                        "temp" + unique_key: condition.get("temp"),
+                        "hum" + unique_key: condition.get("hum"),
+                        "dew_point" + unique_key: condition.get("dew_point"),
+                        "wet_bulb" + unique_key: condition.get("wet_bulb"),
+                        "heat_index" + unique_key: condition.get("heat_index"),
+                        "wind_chill" + unique_key: condition.get("wind_chill"),
+                        "thw_index" + unique_key: condition.get("thw_index"),
+                        "thsw_index" + unique_key: condition.get("thsw_index"),
+                        "wind_speed_last" + unique_key: condition.get(
+                            "wind_speed_last"
+                        ),
+                        "wind_dir_last" + unique_key: condition.get("wind_dir_last"),
+                        "wind_dir_last_rose"
+                        + unique_key: DavisWeatherLinkLive.wind_dir_to_rose(
                             condition.get("wind_dir_last")
                         ),
-                        "wind_speed_avg_last_1_min": condition.get(
+                        "wind_speed_avg_last_1_min" + unique_key: condition.get(
                             "wind_speed_avg_last_1_min"
                         ),
-                        "wind_dir_scalar_avg_last_1_min": condition.get(
+                        "wind_dir_scalar_avg_last_1_min" + unique_key: condition.get(
                             "wind_dir_scalar_avg_last_1_min"
                         ),
-                        "wind_speed_avg_last_2_min": condition.get(
+                        "wind_speed_avg_last_2_min" + unique_key: condition.get(
                             "wind_speed_avg_last_2_min"
                         ),
-                        "wind_dir_scalar_avg_last_2_min": condition.get(
+                        "wind_dir_scalar_avg_last_2_min" + unique_key: condition.get(
                             "wind_dir_scalar_avg_last_2_min"
                         ),
-                        "wind_speed_hi_last_2_min": DavisWeatherLinkLive.zero_float_if_none(
-                            condition.get("wind_speed_hi_last_2_min") #bug in API sometimes throws a null when zero wind
+                        "wind_speed_hi_last_2_min"
+                        + unique_key: DavisWeatherLinkLive.zero_float_if_none(
+                            condition.get(
+                                "wind_speed_hi_last_2_min"
+                            )  # bug in API sometimes throws a null when zero wind
                         ),
-                        "wind_dir_at_hi_speed_last_2_min": DavisWeatherLinkLive.zero_if_none(
-                            condition.get("wind_dir_at_hi_speed_last_2_min") #bug in API sometimes throws a null when zero wind
+                        "wind_dir_at_hi_speed_last_2_min"
+                        + unique_key: DavisWeatherLinkLive.zero_if_none(
+                            condition.get(
+                                "wind_dir_at_hi_speed_last_2_min"
+                            )  # bug in API sometimes throws a null when zero wind
                         ),
-                        "wind_speed_avg_last_10_min": condition.get(
+                        "wind_speed_avg_last_10_min" + unique_key: condition.get(
                             "wind_speed_avg_last_10_min"
                         ),
-                        "wind_dir_scalar_avg_last_10_min": condition.get(
+                        "wind_dir_scalar_avg_last_10_min" + unique_key: condition.get(
                             "wind_dir_scalar_avg_last_10_min"
                         ),
-                        "wind_dir_scalar_avg_last_10_min_rose": DavisWeatherLinkLive.wind_dir_to_rose(
+                        "wind_dir_scalar_avg_last_10_min_rose"
+                        + unique_key: DavisWeatherLinkLive.wind_dir_to_rose(
                             condition.get("wind_dir_scalar_avg_last_10_min")
                         ),
-                        "wind_speed_hi_last_10_min": condition.get(
+                        "wind_speed_hi_last_10_min" + unique_key: condition.get(
                             "wind_speed_hi_last_10_min"
                         ),
-                        "wind_dir_at_hi_speed_last_10_min": condition.get(
+                        "wind_dir_at_hi_speed_last_10_min" + unique_key: condition.get(
                             "wind_dir_at_hi_speed_last_10_min"
                         ),
-                        "rain_size": condition.get(
-                            "rain_size"
-                        ),
-                        "rain_size_desc": DavisWeatherLinkLive.rain_size_description(
+                        "rain_size" + unique_key: condition.get("rain_size"),
+                        "rain_size_desc"
+                        + unique_key: DavisWeatherLinkLive.rain_size_description(
                             condition.get("rain_size")
                         ),
-                        "rain_rate_last": DavisWeatherLinkLive.calculate_rain_amount(
+                        "rain_rate_last"
+                        + unique_key: DavisWeatherLinkLive.calculate_rain_amount(
                             condition.get("rain_rate_last"), condition.get("rain_size")
                         ),
-                        "rain_rate_hi": DavisWeatherLinkLive.calculate_rain_amount(
+                        "rain_rate_hi"
+                        + unique_key: DavisWeatherLinkLive.calculate_rain_amount(
                             condition.get("rain_rate_hi"), condition.get("rain_size")
                         ),
-                        "rainfall_last_15_min": DavisWeatherLinkLive.calculate_rain_amount(
+                        "rainfall_last_15_min"
+                        + unique_key: DavisWeatherLinkLive.calculate_rain_amount(
                             condition.get("rainfall_last_15_min"),
                             condition.get("rain_size"),
                         ),
-                        "rain_rate_hi_last_15_min": DavisWeatherLinkLive.calculate_rain_amount(
+                        "rain_rate_hi_last_15_min"
+                        + unique_key: DavisWeatherLinkLive.calculate_rain_amount(
                             condition.get("rain_rate_hi_last_15_min"),
                             condition.get("rain_size"),
                         ),
-                        "rainfall_last_60_min": DavisWeatherLinkLive.calculate_rain_amount(
+                        "rainfall_last_60_min"
+                        + unique_key: DavisWeatherLinkLive.calculate_rain_amount(
                             condition.get("rainfall_last_60_min"),
                             condition.get("rain_size"),
                         ),
-                        "rainfall_last_24_hr": DavisWeatherLinkLive.calculate_rain_amount(
+                        "rainfall_last_24_hr"
+                        + unique_key: DavisWeatherLinkLive.calculate_rain_amount(
                             condition.get("rainfall_last_24_hr"),
                             condition.get("rain_size"),
                         ),
-                        "rain_storm": DavisWeatherLinkLive.calculate_rain_amount(
+                        "rain_storm"
+                        + unique_key: DavisWeatherLinkLive.calculate_rain_amount(
                             condition.get("rain_storm"), condition.get("rain_size")
                         ),
-                        "rain_storm_start_at": DavisWeatherLinkLive.unix_to_datetime(
+                        "rain_storm_start_at"
+                        + unique_key: DavisWeatherLinkLive.unix_to_datetime(
                             condition.get("rain_storm_start_at")
                         ),
-                        "solar_rad": condition.get("solar_rad"),
-                        "uv_index": condition.get("uv_index"),
-                        "rx_state": DavisWeatherLinkLive.rx_state_description(
+                        "solar_rad" + unique_key: condition.get("solar_rad"),
+                        "uv_index" + unique_key: condition.get("uv_index"),
+                        "rx_state"
+                        + unique_key: DavisWeatherLinkLive.rx_state_description(
                             condition.get("rx_state")
                         ),
-                        "trans_battery_flag": DavisWeatherLinkLive.battery_low_status(
+                        "trans_battery_flag"
+                        + unique_key: DavisWeatherLinkLive.battery_low_status(
                             condition.get("trans_battery_flag")
                         ),
-                        "rainfall_daily": DavisWeatherLinkLive.calculate_rain_amount(
+                        "rainfall_daily"
+                        + unique_key: DavisWeatherLinkLive.calculate_rain_amount(
                             condition.get("rainfall_daily"), condition.get("rain_size")
                         ),
-                        "rainfall_monthly": DavisWeatherLinkLive.calculate_rain_amount(
+                        "rainfall_monthly"
+                        + unique_key: DavisWeatherLinkLive.calculate_rain_amount(
                             condition.get("rainfall_monthly"),
                             condition.get("rain_size"),
                         ),
-                        "rainfall_year": DavisWeatherLinkLive.calculate_rain_amount(
+                        "rainfall_year"
+                        + unique_key: DavisWeatherLinkLive.calculate_rain_amount(
                             condition.get("rainfall_year"), condition.get("rain_size")
                         ),
-                        "rain_storm_last": DavisWeatherLinkLive.calculate_rain_amount(
+                        "rain_storm_last"
+                        + unique_key: DavisWeatherLinkLive.calculate_rain_amount(
                             condition.get("rain_storm_last"), condition.get("rain_size")
                         ),
-                        "rain_storm_last_start_at": DavisWeatherLinkLive.unix_to_datetime(
+                        "rain_storm_last_start_at"
+                        + unique_key: DavisWeatherLinkLive.unix_to_datetime(
                             condition.get("rain_storm_last_start_at")
                         ),
-                        "rain_storm_last_end_at": DavisWeatherLinkLive.unix_to_datetime(
+                        "rain_storm_last_end_at"
+                        + unique_key: DavisWeatherLinkLive.unix_to_datetime(
                             condition.get("rain_storm_last_end_at")
                         ),
                     }
                 )
 
-            elif data_type == 4:  # LSS Temp/Hum Current Conditions record (inside)
+            elif data_type == 2:  # Moisture Current Conditions record
+                unique_key = f"_tx{condition.get('txid')}"
                 weather_data.update(
                     {
-                        "temp_in": condition.get("temp_in"),
-                        "hum_in": condition.get("hum_in"),
-                        "dew_point_in": condition.get("dew_point_in"),
-                        "heat_index_in": condition.get("heat_index_in"),
+                        "lsid" + unique_key: condition.get("lsid"),
+                        "txid" + unique_key: condition.get("txid"),
+                        "temp_1" + unique_key: condition.get("temp_1"),
+                        "temp_2" + unique_key: condition.get("temp_2"),
+                        "temp_3" + unique_key: condition.get("temp_3"),
+                        "temp_4" + unique_key: condition.get("temp_4"),
+                        "moist_soil_1" + unique_key: condition.get("moist_soil_1"),
+                        "moist_soil_2" + unique_key: condition.get("moist_soil_2"),
+                        "moist_soil_3" + unique_key: condition.get("moist_soil_3"),
+                        "moist_soil_4" + unique_key: condition.get("moist_soil_4"),
+                        "wet_leaf_1" + unique_key: condition.get("wet_leaf_1"),
+                        "wet_leaf_2" + unique_key: condition.get("wet_leaf_2"),
+                        "rx_state"
+                        + unique_key: DavisWeatherLinkLive.rx_state_description(
+                            condition.get("rx_state")
+                        ),
+                        "trans_battery_flag"
+                        + unique_key: DavisWeatherLinkLive.battery_low_status(
+                            condition.get("trans_battery_flag")
+                        ),
+                    }
+                )
+
+            elif data_type == 4:  # LSS Temp/Hum Current Conditions record (inside)
+                unique_id = condition.get("lsid")
+                unique_key = f"_ls{unique_id}"
+                weather_data.update(
+                    {
+                        "lsid" + unique_key: condition.get("lsid"),
+                        "temp_in" + unique_key: condition.get("temp_in"),
+                        "hum_in" + unique_key: condition.get("hum_in"),
+                        "dew_point_in" + unique_key: condition.get("dew_point_in"),
+                        "heat_index_in" + unique_key: condition.get("heat_index_in"),
                     }
                 )
 
             elif data_type == 3:  # LSS BAR Current Conditions record
+                unique_id = condition.get("lsid")
+                unique_key = f"_ls{unique_id}"
                 weather_data.update(
                     {
-                        "bar_sea_level": condition.get("bar_sea_level"),
-                        "bar_trend": condition.get("bar_trend"),
-                        "bar_absolute": condition.get("bar_absolute"),
+                        "lsid" + unique_key: condition.get("lsid"),
+                        "bar_sea_level" + unique_key: condition.get("bar_sea_level"),
+                        "bar_trend" + unique_key: condition.get("bar_trend"),
+                        "bar_absolute" + unique_key: condition.get("bar_absolute"),
                     }
                 )
+        _LOGGER.debug("Formatted weather data: %s", weather_data)
 
         return weather_data
 

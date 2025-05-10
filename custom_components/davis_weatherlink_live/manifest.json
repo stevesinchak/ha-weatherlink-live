@@ -9,6 +9,6 @@
     "issue_tracker": "https://github.com/stevesinchak/ha-weatherlink-live/issues",
     "requirements": [],
     "single_config_entry": true,
-    "version": "1.2.3",
+    "version": "25.5.1",
     "zeroconf": [ "_weatherlinklive._tcp.local." ]
   }
