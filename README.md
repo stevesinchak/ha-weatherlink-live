@@ -10,9 +10,9 @@
 
 ## Introduction
 
-This custom integration for [Home Assistant](https://www.home-assistant.io/) provides direct local access to the [Davis WeatherLink Live](https://www.davisinstruments.com/products/weatherlink-live) device on your home network for cloud-free access to all of your weather station sensors.
+This custom integration for [Home Assistant](https://www.home-assistant.io/) provides direct local access to the [Davis WeatherLink Live](https://www.davisinstruments.com/products/weatherlink-live) device on your home network for cloud-free access to all weather station sensors.
 
-The integration polls the [local API](https://weatherlink.github.io/weatherlink-live-local-api/) on the [Davis WeatherLink Live](https://www.davisinstruments.com/products/weatherlink-live) (at a user configurable interval) and exposes 50 sensors to Home Assistant for use on dashboards and automations (not all enabled by default): 
+The integration polls the [local API](https://weatherlink.github.io/weatherlink-live-local-api/) on the [Davis WeatherLink Live](https://www.davisinstruments.com/products/weatherlink-live) (at a user-configurable interval). It exposes 50 sensors to Home Assistant for use on dashboards and automations (not all enabled by default): 
 
 | Standard           | Rain                   | Wind                                | Pressure & Diagnostic  |
 |--------------------|------------------------|-------------------------------------|------------------------|
@@ -35,7 +35,7 @@ The integration polls the [local API](https://weatherlink.github.io/weatherlink-
 
 **Install with File Copy**
 
-1. Copy the entire `davis_weatherlink_live` directory from this repository into the `custom_components` directory on your Home Assistant installation. `custom_components` is nested within the base Home Assistant `config` directory, if it does not exist, you can create it. Tip: Use the [Studio Code Server](https://github.com/hassio-addons/addon-vscode/blob/main/vscode/DOCS.md) add-on for an easy way to navigate the file system and upload files.
+1. Copy the entire `davis_weatherlink_live` directory from this repository into the `custom_components` directory on your Home Assistant installation. `custom_components` is nested within the base Home Assistant `config` directory; if it does not exist, you can create it. Tip: Use the [Studio Code Server](https://github.com/hassio-addons/addon-vscode/blob/main/vscode/DOCS.md) add-on for an easy way to navigate the file system and upload files.
 
 2. Restart Home Assistant so the custom integration is recognized. 
 
@@ -43,36 +43,42 @@ The integration polls the [local API](https://weatherlink.github.io/weatherlink-
 
 1. If you have HACS ([Home Assistant Community Store](https://www.hacs.xyz/)) installed on your Home Assistant server, you can add this repo as a Custom Repository. Simply click on the three dots in the top right of the Home Assistant Community Store page, and select `Custom repositories`.
 
-2. Copy and paste in the URL of this repository `https://github.com/stevesinchak/ha-weatherlink-live` and set the Type to `Integration` and hit Add. 
+2. Copy and paste the URL of this repository `https://github.com/stevesinchak/ha-weatherlink-live` and set the Type to `Integration` and hit Add. 
 
 3. Then just search for `Davis WeatherLink Live` and click on the listing.  Scroll down and hit Download to install.  
 
-4. Reboot your Home Assistant server and you are ready to configure.
+4. Reboot your Home Assistant server, and you are ready to configure.
 
 
 ## Configuration
 
 1. There are two methods to add/enable the integration: 
 
-    * Auto Discovery: If the WeatherLink Live is on the same network as your Home Assistant Server, the device should be auto-detected (thanks to Zeroconf) within a few minutes and will be listed under the Discoverd section. Go to your [Home Assistant Integrations dashboard](https://my.home-assistant.io/redirect/integrations/) and hit the Add button and jump to step 4. 
+    * Auto Discovery: If the WeatherLink Live is on the same network as your Home Assistant Server, the device should be auto-detected (thanks to Zeroconf) within a few minutes and will be listed under the Discovered section. Go to your [Home Assistant Integrations dashboard](https://my.home-assistant.io/redirect/integrations/) and hit the Add button, and jump to step 4. 
 
-    * Manual Add: Click this link to manually add the integration.  
+    * Manual Add: [Click this link to add the integration manually](https://my.home-assistant.io/redirect/config_flow_start/?domain=davis_weatherlink_live).  
 
-2. Depending on how the integration was added in the previous step, all fields may be pre-populated.  There are three fields total:
+2. Depending on how the integration was added in the previous step, all fields may be pre-populated, but are available to be adjusted.  There are three fields total:
 
     * API Host: The ip address or hostname of your Davis WeatherLink Live
 
     * API Path: Path to the API Endpoint (leave at the default unless this changes in a future device firmware update)
 
-    * Update Interval: How frequently you want the integration to capture new data measured in seconds.  I set mine to 10 seconds as I like to capture detailed wind data. In other cases a simple 5 minute interval, 300 seconds, is sufficient. **Note:** *The Davis WeatherLink Live only updates the API every 10 seconds so intervals lower than 10 may result in errors and/or duplicate data.*
+    * Update Interval: How frequently you want the integration to capture new data, measured in seconds.  I set mine to 10 seconds as I prefer to capture detailed wind data. In other cases, a simple 5-minute interval, 300 seconds, is sufficient. **Note:** *The Davis WeatherLink Live only updates the API every 10 seconds; intervals lower than 10 may result in errors and/or duplicate data, so the integration will not accept values below 10.*
 
-At any point you can update the configuration you specified while adding the integration by simply going to the [Davis WeatherLink Live 6100](https://my.home-assistant.io/redirect/integration/?domain=davis_weatherlink_live) page and hitting the `CONFIGURE` button. This is helpful if you would like to adjust the Update Interval.  
+    Hit `SUBMIT` when you are ready to proceed with setup.
+
+3. The integration will automatically build a device in Home Assistant for each physical device registered on the Davis WeatherLink Live. This includes all potential sensors for the device type listed in the API specification (even if they are not present). On this final setup screen, you will have an opportunity to fine-tune the device names and set the 'Area' you want them to be assigned in Home Assistant. If you are happy with the defaults, hit `SKIP AND FINISH` to complete the setup.
+
+**Note: You may want to disable specific device sensors that are not relevant for your device hardware. Unfortunately, the Davis WeatherLink Live API does not provide a good way for this integration to identify specific sensors that are not present, as the actual sensor device model sending the data to the WeatherLink Live is not available in the local API. I explored automatically disabling sensors that have null or zero values upon setup, but observed that this was not a reliable technique, as some sensors would send actual data later, or a zero value is legitimate in many cases (no wind).  If anyone has a better approach, please [start a discussion here](https://github.com/stevesinchak/ha-weatherlink-live/discussions).**
+
+At any point, you can update the configuration you specified while adding the integration by simply going to the [Davis WeatherLink Live 6100](https://my.home-assistant.io/redirect/integration/?domain=davis_weatherlink_live) page and hitting the `CONFIGURE` button. This is helpful if you would like to adjust the Update Interval.  
 
 ## Removal
 
 The integration can be uninstalled and removed with three steps:
 
-1. Go to the [Davis WeatherLink Live 6100](https://my.home-assistant.io/redirect/integration/?domain=davis_weatherlink_live) integration page, click on the three dots to the right of the `CONFIGURE` button and select `Delete`. Hit `DELETE` again on the confirmation screen. The device and sensor entities have been deleted and the integration is no longer active. 
+1. Go to the [Davis WeatherLink Live 6100](https://my.home-assistant.io/redirect/integration/?domain=davis_weatherlink_live) integration page, click on the three dots to the right of the `CONFIGURE` button, and select `Delete`. Hit `DELETE` again on the confirmation screen. The device and sensor entities have been deleted, and the integration is no longer active. 
 
 2. Delete the entire `davis_weatherlink_live` directory from the `custom_components` directory on to completely remove the inactive integration from your system. 
 
@@ -80,18 +86,11 @@ The integration can be uninstalled and removed with three steps:
 
 ## Troubleshooting
 
-The most common issue with this integration is 
-
 In the event you are experiencing a problem with this integration, please make sure you have entered the correct API host. It should contain an IP address or a hostname and nothing more (no http:// in front).
 
-On the [Davis WeatherLink Live 6100](https://my.home-assistant.io/redirect/integration/?domain=davis_weatherlink_live) integration page you can also enable debug logging so all logs show up in your [Home Assistant Core logging page](https://my.home-assistant.io/redirect/logs/?).  
+On the [Davis WeatherLink Live 6100](https://my.home-assistant.io/redirect/integration/?domain=davis_weatherlink_live) integration page, you can also enable debug logging so all logs show up in your [Home Assistant Core logging page](https://my.home-assistant.io/redirect/logs/?).  
 
 If you continue to have an issue, please open an issue [here](https://github.com/stevesinchak/ha-weatherlink-live/issues). 
-
-## Known Limitations
-
-This integrations fully supports all capabilities of the Davis WeatherLink Live 6100 but only for one weather station.  In the rare even you have multiple weather stations connected to WeatherLink Live, only the first weather station will be supported. If you would like this integration to support multiple weather stations, please open an issue [here](https://github.com/stevesinchak/ha-weatherlink-live/issues). 
-
 
 ### Home Assistant Integration Quality Scale Report
 
