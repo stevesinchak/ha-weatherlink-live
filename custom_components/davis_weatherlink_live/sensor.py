@@ -35,13 +35,13 @@ _LOGGER = logging.getLogger(__name__)
 def get_device_name(condition: tuple):
     match condition.get("data_structure_type"):
         case 1:
-            return "ISS TX " + str(condition.get("txid"))
+            return "Davis ISS TX " + str(condition.get("txid"))
         case 2:
-            return "Leaf/Soil Moisture TX " + str(condition.get("txid"))
+            return "Davis Leaf/Soil Moisture TX " + str(condition.get("txid"))
         case 3:
-            return "WLL BAR"  # + str(condition.get("lsid"))
+            return "Davis LSS BAR"  # + str(condition.get("lsid"))
         case 4:
-            return "WLL Temp/Hum"  # + str(condition.get("lsid"))
+            return "Davis LSS"  # + str(condition.get("lsid"))
 
 
 # Device Sensor type helper that returns the correct sensors based on the device type
