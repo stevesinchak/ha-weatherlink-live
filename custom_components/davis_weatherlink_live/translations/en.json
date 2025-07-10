@@ -183,6 +183,15 @@
             },
             "wet_leaf_2": {
                 "name": "Leaf Wetness 2"
+            },
+            "pm1": {
+                "name": "PM1"
+            },
+            "pm2p5": {
+                "name": "PM2.5"
+            },
+            "pm10": {
+                "name": "PM10"
             }
         }
     },

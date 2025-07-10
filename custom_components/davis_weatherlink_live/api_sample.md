@@ -9,6 +9,8 @@ The data_structure_type field can be used to determine what type of record a JSO
 
 4 = LSS Temp/Hum Current Conditions record
 
+6 = Air Quality Monitor
+
 {
     "data":
     {
@@ -90,7 +92,35 @@ The data_structure_type field can be used to determine what type of record a JSO
                 "bar_sea_level":30.008,                        // most recent bar sensor reading with elevation adjustment **(inches)**
                 "bar_trend":null,                              // current 3 hour bar trend **(inches)**
                 "bar_absolute":30.008                          // raw bar sensor reading **(inches)**
-            }
+            },
+            {
+                "lsid": 852455,
+                "data_structure_type": 6,
+                "temp": 70.9,                                   // most recent valid inside temp **(°F)**
+                "hum": 58.1,                                    // most recent valid inside humidity **(%RH)**
+                "dew_point": 55.4,                              // **(°F)**
+                "wet_bulb": 59.9,                               // **(°F)**
+                "heat_index": 70.3,                             // **(°F)**
+                "pm_1_last": 2,
+                "pm_2p5_last": 2,
+                "pm_10_last": 2,
+                "pm_1": 2.71,                                   // current PM 1 measurement **µg/m³" (micrograms per cubic meter)**
+                "pm_2p5": 3.31,                                 // current PM 2.5 measurement **µg/m³" (micrograms per cubic meter)**
+                "pm_2p5_last_1_hour": 3.84,
+                "pm_2p5_last_3_hours": 4.08,
+                "pm_2p5_last_24_hours": 2.61,
+                "pm_2p5_nowcast": 4.0,
+                "pm_10": 3.89,                                  // current PM 10 measurement **µg/m³" (micrograms per cubic meter)**
+                "pm_10_last_1_hour": 4.45,
+                "pm_10_last_3_hours": 4.66,
+                "pm_10_last_24_hours": 3.09,
+                "pm_10_nowcast": 4.61,
+                "last_report_time": 1751909719,
+                "pct_pm_data_last_1_hour": 100,
+                "pct_pm_data_last_3_hours": 100,
+                "pct_pm_data_nowcast": 100,
+                "pct_pm_data_last_24_hours": 100
+        }
         ]
     },
     "error":null

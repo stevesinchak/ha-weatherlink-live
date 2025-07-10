@@ -183,6 +183,39 @@
             },
             "wet_leaf_2": {
                 "name": "Leaf Wetness 2"
+            },
+            "pm_1_last": {
+                "name": "PM1 Last"
+            },
+            "pm_2p5_last": {
+                "name": "PM2.5 Last"
+            },
+            "pm_25p_last_1_hour": {
+                "name": "PM2.5 Last Hour"
+            },
+            "pm_25p_last_3_hours": {
+                "name": "PM2.5 Last 3 hours"
+            },
+            "pm_25p_last_24_hours": {
+                "name": "PM2.5 Last 24 Hours"
+            },
+            "pm_25p_nowcast": {
+                "name": "PM2.5 Nowcast"
+            },
+            "pm_10": {
+                "name": "PM10"
+            },
+            "pm_10_last_1_hour": {
+                "name": "PM10 Last Hour"
+            },
+            "pm_10_last_3_hours": {
+                "name": "PM10 Last 3 Hours"
+            },
+            "pm_10_last_24_hours": {
+                "name": "PM10 Last 24 Hours"
+            },
+            "pm_10_nowcast": {
+                "name": "PM10 Nowcast"
             }
         }
     },
