@@ -289,6 +289,22 @@ class DavisWeatherLinkLive:
                         "heat_index_in" + unique_key: condition.get("heat_index_in"),
                     }
                 )
+                
+            elif data_type == 6:  # Air Quality Monitor
+                unique_id = condition.get("lsid")
+                unique_key = f"_ls{unique_id}"
+                weather_data.update(
+                    {
+                        "lsid" + unique_key: condition.get("lsid"),
+                        "temp" + unique_key: condition.get("temp"),
+                        "hum" + unique_key: condition.get("hum"),
+                        "dew_point" + unique_key: condition.get("dew_point"),
+                        "heat_index" + unique_key: condition.get("heat_index"),
+                        "pm_1" + unique_key: condition.get("pm_1"),
+                        "pm_2p5" + unique_key: condition.get("pm_2p5"),
+                        "pm_10" + unique_key: condition.get("pm_10"),
+                    }
+                )
 
             elif data_type == 3:  # LSS BAR Current Conditions record
                 unique_id = condition.get("lsid")

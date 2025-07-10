@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     UnitOfLength,
     UnitOfPressure,
     UnitOfSpeed,
@@ -42,6 +43,8 @@ def get_device_name(condition: tuple):
             return "Davis LSS BAR"  # + str(condition.get("lsid"))
         case 4:
             return "Davis LSS"  # + str(condition.get("lsid"))
+        case 6:
+            return "Davis AirLink AQM"  # + str(condition.get("lsid"))
 
 
 # Device Sensor type helper that returns the correct sensors based on the device type
@@ -625,6 +628,77 @@ def get_device_sensors(condition: tuple):
             ),
         )
         return DST_4
+
+    elif device_type == 6:  # WeatherLink Air Quality Monitors
+        unique_id = condition.get("lsid")
+        unique_key = f"_ls{unique_id}"
+        # Device Sensor Type 6: Weatherlink AQI Conditions
+        DST_6: tuple[SensorEntityDescription, ...] = (
+            SensorEntityDescription(
+                key="lsid" + unique_key,
+                translation_key="lsid",
+                entity_category=EntityCategory.DIAGNOSTIC,
+                entity_registry_visible_default=False,
+                entity_registry_enabled_default=False,
+            ),
+            SensorEntityDescription(
+                key="data_structure_type" + unique_key,
+                translation_key="dst",
+                entity_category=EntityCategory.DIAGNOSTIC,
+                entity_registry_visible_default=False,
+                entity_registry_enabled_default=False,
+            ),
+            SensorEntityDescription(
+                key="temp" + unique_key,
+                translation_key="temp",
+                native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+                device_class=SensorDeviceClass.TEMPERATURE,
+                state_class=SensorStateClass.MEASUREMENT,
+            ),
+            SensorEntityDescription(
+                key="hum" + unique_key,
+                translation_key="hum",
+                native_unit_of_measurement=PERCENTAGE,
+                device_class=SensorDeviceClass.HUMIDITY,
+                state_class=SensorStateClass.MEASUREMENT,
+            ),
+            SensorEntityDescription(
+                key="dew_point" + unique_key,
+                translation_key="dew_point",
+                native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+                device_class=SensorDeviceClass.TEMPERATURE,
+            ),
+            SensorEntityDescription(
+                key="heat_index" + unique_key,
+                translation_key="heat_index",
+                native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+                device_class=SensorDeviceClass.TEMPERATURE,
+                state_class=SensorStateClass.MEASUREMENT,
+            ),
+            SensorEntityDescription(
+                key="pm_1" + unique_key,
+                translation_key="pm_1",
+                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                device_class=SensorDeviceClass.PM1,
+                state_class=SensorStateClass.MEASUREMENT,
+            ),
+            SensorEntityDescription(
+                key="pm_2p5" + unique_key,
+                translation_key="pm_2p5",
+                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                device_class=SensorDeviceClass.PM25,
+                state_class=SensorStateClass.MEASUREMENT,
+            ),
+            SensorEntityDescription(
+                key="pm_10" + unique_key,
+                translation_key="pm_10",
+                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                device_class=SensorDeviceClass.PM10,
+                state_class=SensorStateClass.MEASUREMENT,
+            ),
+        )
+        return DST_6
+
 
     else:
         _LOGGER.warning("Unknown API device type %s", device_type)
