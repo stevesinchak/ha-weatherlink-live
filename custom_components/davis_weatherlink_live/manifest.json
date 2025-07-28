@@ -8,6 +8,6 @@
     "iot_class": "local_polling",
     "issue_tracker": "https://github.com/stevesinchak/ha-weatherlink-live/issues",
     "requirements": [],
-    "version": "25.7.1",
+    "version": "25.7.2",
     "zeroconf": [ "_weatherlinklive._tcp.local.", "_airlink._tcp.local." ]
   }
