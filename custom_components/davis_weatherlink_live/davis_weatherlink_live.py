@@ -9,8 +9,11 @@ from .const import API_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
-# API Reference: https://weatherlink.github.io/weatherlink-live-local-api/
+# WeatherLink API Reference: https://weatherlink.github.io/weatherlink-live-local-api/
 # https://github.com/weatherlink/weatherlink-live-local-api/blob/master/API.md
+
+# AirLink API Reference: https://weatherlink.github.io/airlink-local-api/
+# https://github.com/weatherlink/airlink-local-api/blob/master/index.md
 
 
 class DavisWeatherLinkLive:
@@ -277,6 +280,18 @@ class DavisWeatherLinkLive:
                     }
                 )
 
+            elif data_type == 3:  # LSS BAR Current Conditions record
+                unique_id = condition.get("lsid")
+                unique_key = f"_ls{unique_id}"
+                weather_data.update(
+                    {
+                        "lsid" + unique_key: condition.get("lsid"),
+                        "bar_sea_level" + unique_key: condition.get("bar_sea_level"),
+                        "bar_trend" + unique_key: condition.get("bar_trend"),
+                        "bar_absolute" + unique_key: condition.get("bar_absolute"),
+                    }
+                )
+
             elif data_type == 4:  # LSS Temp/Hum Current Conditions record (inside)
                 unique_id = condition.get("lsid")
                 unique_key = f"_ls{unique_id}"
@@ -299,24 +314,54 @@ class DavisWeatherLinkLive:
                         "temp" + unique_key: condition.get("temp"),
                         "hum" + unique_key: condition.get("hum"),
                         "dew_point" + unique_key: condition.get("dew_point"),
+                        "wet_bulb" + unique_key: condition.get("wet_bulb"),
                         "heat_index" + unique_key: condition.get("heat_index"),
+                        "pm_1_last" + unique_key: condition.get("pm_1_last"),
+                        "pm_2p5_last" + unique_key: condition.get("pm_2p5_last"),
+                        "pm_10_last" + unique_key: condition.get("pm_10_last"),
                         "pm_1" + unique_key: condition.get("pm_1"),
                         "pm_2p5" + unique_key: condition.get("pm_2p5"),
                         "pm_10" + unique_key: condition.get("pm_10"),
+                        "pm_2p5_last_1_hour" + unique_key: condition.get(
+                            "pm_2p5_last_1_hour"
+                        ),
+                        "pm_2p5_last_3_hours" + unique_key: condition.get(
+                            "pm_2p5_last_3_hours"
+                        ),
+                        "pm_2p5_nowcast" + unique_key: condition.get(
+                            "pm_2p5_nowcast"
+                        ),
+                        "pm_2p5_last_24_hours" + unique_key: condition.get(
+                            "pm_2p5_last_24_hours"
+                        ),
+                        "pm_10_last_1_hour" + unique_key: condition.get(
+                            "pm_10_last_1_hour"
+                        ),
+                        "pm_10_last_3_hours" + unique_key: condition.get(
+                            "pm_10_last_3_hours"
+                        ),
+                        "pm_10_nowcast" + unique_key: condition.get("pm_10_nowcast"),
+                        "pm_10_last_24_hours" + unique_key: condition.get(
+                            "pm_10_last_24_hours"
+                        ),
+                        "last_report_time" + unique_key: DavisWeatherLinkLive.unix_to_datetime(
+                            condition.get("last_report_time")
+                        ),
+                        "pct_pm_data_last_1_hour" + unique_key: condition.get(
+                            "pct_pm_data_last_1_hour"
+                        ),
+                        "pct_pm_data_last_3_hours" + unique_key: condition.get(
+                            "pct_pm_data_last_3_hours"
+                        ),
+                        "pct_pm_data_nowcast" + unique_key: condition.get(
+                            "pct_pm_data_nowcast"
+                        ),
+                        "pct_pm_data_last_24_hours" + unique_key: condition.get(
+                            "pct_pm_data_last_24_hours"
+                        ),
                     }
                 )
 
-            elif data_type == 3:  # LSS BAR Current Conditions record
-                unique_id = condition.get("lsid")
-                unique_key = f"_ls{unique_id}"
-                weather_data.update(
-                    {
-                        "lsid" + unique_key: condition.get("lsid"),
-                        "bar_sea_level" + unique_key: condition.get("bar_sea_level"),
-                        "bar_trend" + unique_key: condition.get("bar_trend"),
-                        "bar_absolute" + unique_key: condition.get("bar_absolute"),
-                    }
-                )
         _LOGGER.debug("Formatted weather data: %s", weather_data)
 
         return weather_data

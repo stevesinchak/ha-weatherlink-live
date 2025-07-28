@@ -185,25 +185,34 @@
                 "name": "Leaf Wetness 2"
             },
             "pm_1_last": {
-                "name": "PM1 Last"
+                "name": "Current PM1"
             },
             "pm_2p5_last": {
-                "name": "PM2.5 Last"
+                "name": "Current PM2.5"
             },
-            "pm_25p_last_1_hour": {
-                "name": "PM2.5 Last Hour"
+            "pm_10_last": {
+                "name": "Current PM10"
             },
-            "pm_25p_last_3_hours": {
-                "name": "PM2.5 Last 3 hours"
+            "pm_1": {
+                "name": "PM1 Last Minute"
             },
-            "pm_25p_last_24_hours": {
-                "name": "PM2.5 Last 24 Hours"
-            },
-            "pm_25p_nowcast": {
-                "name": "PM2.5 Nowcast"
+            "pm_2p5": {
+                "name": "PM2.5 Last Minute"
             },
             "pm_10": {
-                "name": "PM10"
+                "name": "PM10 Last Minute"
+            },
+            "pm_2p5_last_1_hour": {
+                "name": "PM2.5 Last Hour"
+            },
+            "pm_2p5_last_3_hours": {
+                "name": "PM2.5 Last 3 hours"
+            },
+            "pm_2p5_last_24_hours": {
+                "name": "PM2.5 Last 24 Hours"
+            },
+            "pm_2p5_nowcast": {
+                "name": "PM2.5 Last 12 Hours"
             },
             "pm_10_last_1_hour": {
                 "name": "PM10 Last Hour"
@@ -215,8 +224,24 @@
                 "name": "PM10 Last 24 Hours"
             },
             "pm_10_nowcast": {
-                "name": "PM10 Nowcast"
+                "name": "PM10 Last 12 Hours"
+            },
+            "last_report_time": {
+                "name": "Last AQM Report Time"
+            },
+            "pct_pm_data_last_1_hour": {
+                "name": "PM Data Last Hour"
+            },
+            "pct_pm_data_last_3_hours": {
+                "name": "PM Data Last 3 Hours"
+            },
+            "pct_pm_data_nowcast": {
+                "name": "PM Data Last 12 Hours"
+            },
+            "pct_pm_data_last_24_hours": {
+                "name": "PM Data Last 24 Hours"
             }
+
         }
     },
     "config": {
