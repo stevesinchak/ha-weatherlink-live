@@ -2,10 +2,10 @@
     "entity": {
         "sensor": {
             "lsid": {
-                "name": "ISS Logical Sensor ID"
+                "name": "Logical Sensor ID"
             },
             "txid": {
-                "name": "ISS Transmitter ID"
+                "name": "Transmitter ID"
             },
             "temp": {
                 "name": "Temperature"

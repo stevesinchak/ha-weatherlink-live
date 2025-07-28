@@ -223,7 +223,6 @@ def get_device_sensors(condition: tuple):
                 key="wind_dir_last" + unique_key,
                 translation_key="wind_dir_last",
                 native_unit_of_measurement=DEGREE,
-                icon="mdi:compass-outline",
                 device_class=SensorDeviceClass.WIND_DIRECTION,
                 state_class=SensorStateClass.MEASUREMENT_ANGLE,
             ),
@@ -243,7 +242,6 @@ def get_device_sensors(condition: tuple):
                 key="wind_dir_scalar_avg_last_1_min" + unique_key,
                 translation_key="wind_dir_scalar_avg_last_1_min",
                 native_unit_of_measurement=DEGREE,
-                icon="mdi:compass-outline",
                 device_class=SensorDeviceClass.WIND_DIRECTION,
                 state_class=SensorStateClass.MEASUREMENT_ANGLE,
             ),
@@ -258,7 +256,6 @@ def get_device_sensors(condition: tuple):
                 key="wind_dir_scalar_avg_last_2_min" + unique_key,
                 translation_key="wind_dir_scalar_avg_last_2_min",
                 native_unit_of_measurement=DEGREE,
-                icon="mdi:compass-outline",
                 device_class=SensorDeviceClass.WIND_DIRECTION,
                 state_class=SensorStateClass.MEASUREMENT_ANGLE,
             ),
@@ -273,7 +270,6 @@ def get_device_sensors(condition: tuple):
                 key="wind_dir_at_hi_speed_last_2_min" + unique_key,
                 translation_key="wind_dir_at_hi_speed_last_2_min",
                 native_unit_of_measurement=DEGREE,
-                icon="mdi:compass-outline",
                 device_class=SensorDeviceClass.WIND_DIRECTION,
                 state_class=SensorStateClass.MEASUREMENT_ANGLE,
             ),
@@ -288,7 +284,6 @@ def get_device_sensors(condition: tuple):
                 key="wind_dir_scalar_avg_last_10_min" + unique_key,
                 translation_key="wind_dir_scalar_avg_last_10_min",
                 native_unit_of_measurement=DEGREE,
-                icon="mdi:compass-outline",
                 device_class=SensorDeviceClass.WIND_DIRECTION,
                 state_class=SensorStateClass.MEASUREMENT_ANGLE,
             ),
@@ -308,7 +303,6 @@ def get_device_sensors(condition: tuple):
                 key="wind_dir_at_hi_speed_last_10_min" + unique_key,
                 translation_key="wind_dir_at_hi_speed_last_10_min",
                 native_unit_of_measurement=DEGREE,
-                icon="mdi:compass-outline",
                 device_class=SensorDeviceClass.WIND_DIRECTION,
                 state_class=SensorStateClass.MEASUREMENT_ANGLE,
             ),
@@ -332,6 +326,7 @@ def get_device_sensors(condition: tuple):
                 native_unit_of_measurement=rain_rate_unit,
                 device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
                 state_class=SensorStateClass.MEASUREMENT,
+                suggested_display_precision=2,
             ),
             SensorEntityDescription(
                 key="rain_rate_hi" + unique_key,
@@ -339,6 +334,7 @@ def get_device_sensors(condition: tuple):
                 native_unit_of_measurement=rain_rate_unit,
                 device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
                 state_class=SensorStateClass.MEASUREMENT,
+                suggested_display_precision=2,
             ),
             SensorEntityDescription(
                 key="rainfall_last_15_min" + unique_key,
@@ -346,6 +342,7 @@ def get_device_sensors(condition: tuple):
                 native_unit_of_measurement=rain_amount_unit,
                 device_class=SensorDeviceClass.PRECIPITATION,
                 state_class=SensorStateClass.MEASUREMENT,
+                suggested_display_precision=2,
             ),
             SensorEntityDescription(
                 key="rain_rate_hi_last_15_min" + unique_key,
@@ -353,6 +350,7 @@ def get_device_sensors(condition: tuple):
                 native_unit_of_measurement=rain_rate_unit,
                 device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
                 state_class=SensorStateClass.MEASUREMENT,
+                suggested_display_precision=2,
             ),
             SensorEntityDescription(
                 key="rainfall_last_60_min" + unique_key,
@@ -360,6 +358,7 @@ def get_device_sensors(condition: tuple):
                 native_unit_of_measurement=rain_amount_unit,
                 device_class=SensorDeviceClass.PRECIPITATION,
                 state_class=SensorStateClass.MEASUREMENT,
+                suggested_display_precision=2,
             ),
             SensorEntityDescription(
                 key="rainfall_last_24_hr" + unique_key,
@@ -367,6 +366,7 @@ def get_device_sensors(condition: tuple):
                 native_unit_of_measurement=rain_amount_unit,
                 device_class=SensorDeviceClass.PRECIPITATION,
                 state_class=SensorStateClass.MEASUREMENT,
+                suggested_display_precision=2,
             ),
             SensorEntityDescription(
                 key="rain_storm" + unique_key,
@@ -374,6 +374,7 @@ def get_device_sensors(condition: tuple):
                 native_unit_of_measurement=rain_amount_unit,
                 device_class=SensorDeviceClass.PRECIPITATION,
                 state_class=SensorStateClass.MEASUREMENT,
+                suggested_display_precision=2,
             ),
             SensorEntityDescription(
                 key="rain_storm_start_at" + unique_key,
@@ -411,6 +412,7 @@ def get_device_sensors(condition: tuple):
                 native_unit_of_measurement=rain_amount_unit,
                 device_class=SensorDeviceClass.PRECIPITATION,
                 state_class=SensorStateClass.TOTAL,
+                suggested_display_precision=2,
             ),
             SensorEntityDescription(
                 key="rainfall_monthly" + unique_key,
@@ -418,6 +420,7 @@ def get_device_sensors(condition: tuple):
                 native_unit_of_measurement=rain_amount_unit,
                 device_class=SensorDeviceClass.PRECIPITATION,
                 state_class=SensorStateClass.TOTAL,
+                suggested_display_precision=2,
             ),
             SensorEntityDescription(
                 key="rainfall_year" + unique_key,
@@ -425,6 +428,7 @@ def get_device_sensors(condition: tuple):
                 native_unit_of_measurement=rain_amount_unit,
                 device_class=SensorDeviceClass.PRECIPITATION,
                 state_class=SensorStateClass.TOTAL,
+                suggested_display_precision=2,
             ),
             SensorEntityDescription(
                 key="rain_storm_last" + unique_key,
@@ -432,6 +436,7 @@ def get_device_sensors(condition: tuple):
                 native_unit_of_measurement=rain_amount_unit,
                 device_class=SensorDeviceClass.PRECIPITATION,
                 state_class=SensorStateClass.TOTAL,
+                suggested_display_precision=2,
             ),
             SensorEntityDescription(
                 key="rain_storm_last_start_at" + unique_key,
@@ -892,6 +897,6 @@ class WeatherSensor(CoordinatorEntity, SensorEntity):
             # "name": "Davis Weather",
             "name": self._device_name,
             "manufacturer": "Davis Instruments",
-            "model": "WeatherLink Live 6100",
+            "model": "Davis WeatherLink Live / AirLink",
             "sw_version": "1.0",  # Add actual firmware version if Davis ever updates API
         }
