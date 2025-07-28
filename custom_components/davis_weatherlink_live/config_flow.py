@@ -68,7 +68,7 @@ class WeatherStationConfigFlow(ConfigFlow, domain=DOMAIN):
                 validate_update_interval(user_input["update_interval"])
 
                 return self.async_create_entry(
-                    title="Weather Station",
+                    title="Davis Device",
                     data={},  # Store any required data here
                     options=user_input,  # Store user input in options so they can change them later
                 )
