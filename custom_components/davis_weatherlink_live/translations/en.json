@@ -184,15 +184,64 @@
             "wet_leaf_2": {
                 "name": "Leaf Wetness 2"
             },
-            "pm1": {
-                "name": "PM1"
+            "pm_1_last": {
+                "name": "Current PM1"
             },
-            "pm2p5": {
-                "name": "PM2.5"
+            "pm_2p5_last": {
+                "name": "Current PM2.5"
             },
-            "pm10": {
-                "name": "PM10"
+            "pm_10_last": {
+                "name": "Current PM10"
+            },
+            "pm_1": {
+                "name": "PM1 Last Minute"
+            },
+            "pm_2p5": {
+                "name": "PM2.5 Last Minute"
+            },
+            "pm_10": {
+                "name": "PM10 Last Minute"
+            },
+            "pm_2p5_last_1_hour": {
+                "name": "PM2.5 Last Hour"
+            },
+            "pm_2p5_last_3_hours": {
+                "name": "PM2.5 Last 3 hours"
+            },
+            "pm_2p5_last_24_hours": {
+                "name": "PM2.5 Last 24 Hours"
+            },
+            "pm_2p5_nowcast": {
+                "name": "PM2.5 Last 12 Hours"
+            },
+            "pm_10_last_1_hour": {
+                "name": "PM10 Last Hour"
+            },
+            "pm_10_last_3_hours": {
+                "name": "PM10 Last 3 Hours"
+            },
+            "pm_10_last_24_hours": {
+                "name": "PM10 Last 24 Hours"
+            },
+            "pm_10_nowcast": {
+                "name": "PM10 Last 12 Hours"
+            },
+            "last_report_time": {
+                "name": "Last AQM Report Time"
+            },
+            "pct_pm_data_last_1_hour": {
+                "name": "PM Data Last Hour"
+            },
+            "pct_pm_data_last_3_hours": {
+                "name": "PM Data Last 3 Hours"
+            },
+            "pct_pm_data_nowcast": {
+                "name": "PM Data Last 12 Hours"
+            },
+            "pct_pm_data_last_24_hours": {
+                "name": "PM Data Last 24 Hours"
             }
+
         }
     },
     "config": {

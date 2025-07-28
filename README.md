@@ -31,6 +31,22 @@ The integration polls the [local API](https://weatherlink.github.io/weatherlink-
 | Indoor Dew Point   | Rain Storm Start       | Wind Gust Last 10 Min               |                        |
 | Indoor Heat Index  | Rain Storm End         | Wind Gust Direction Last 10 Min     |                        |
 
+This integration also now supports the [local api](https://weatherlink.github.io/airlink-local-api/) of the [Davis AirLink Air Quality Monitor](https://www.davisinstruments.com/pages/airlink) device with all 24 sensors. 
+
+| Standard    | Particulate Matter | PM Averages         | Diagnostic              |
+|-------------|--------------------|---------------------|-------------------------|
+| Temperature | Current PM1        | PM1 Last Minute     | Last Report Time        |
+| Humidity    | Current PM2.5      | PM2.5 Last Minute   | % PM Data Last Hour     |
+| Dew Point   | Current PM10       | PM2.5 Last Hour     | % PM Data Last 3 Hours  |
+| Wet Bulb    |                    | PM2.5 Last 3 Hours  | % PM Data Last 12 Hours |
+| Heat Index  |                    | PM2.5 Last 12 Hours | % PM Data Last 24 Hours |
+|             |                    | PM2.5 Last 24 Hours |                         |
+|             |                    | PM10 Last Minute    |                         |
+|             |                    | PM10 Last Hour      |                         |
+|             |                    | PM10 Last 3 Hours   |                         |
+|             |                    | PM10 Last 12 Hours  |                         |
+|             |                    | PM10 Last 24 Hours  |                         |
+
 ## Installation
 
 **Install with File Copy**
