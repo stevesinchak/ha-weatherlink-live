@@ -1,6 +1,6 @@
 {
     "domain": "davis_weatherlink_live",
-    "name": "Davis WeatherLink Live 6100",
+    "name": "Davis Devices (WeatherLink Live / AirLink)",
     "codeowners": ["@stevesinchak"],
     "config_flow": true,
     "dependencies": [],
