@@ -1,6 +1,6 @@
 ![Davis Logo](https://raw.githubusercontent.com/stevesinchak/ha-weatherlink-live/main/brand/davis_weatherlink_live/logo.png)
 
-# Davis WeatherLink Live Custom Integration
+# Davis WeatherLink Live / AirLink Custom Integration
 * [Introduction](#introduction)
 * [Installation](#installation)
 * [Configuration](#configuration)
@@ -10,7 +10,7 @@
 
 ## Introduction
 
-This custom integration for [Home Assistant](https://www.home-assistant.io/) provides direct local access to the [Davis WeatherLink Live](https://www.davisinstruments.com/products/weatherlink-live) device on your home network for cloud-free access to all weather station sensors.
+This custom integration for [Home Assistant](https://www.home-assistant.io/) provides direct local access to the [Davis WeatherLink Live 6100](https://www.davisinstruments.com/products/weatherlink-live) device on your home network for cloud-free access to all weather station sensors.
 
 The integration polls the [local API](https://weatherlink.github.io/weatherlink-live-local-api/) on the [Davis WeatherLink Live](https://www.davisinstruments.com/products/weatherlink-live) (at a user-configurable interval). It exposes 50 sensors to Home Assistant for use on dashboards and automations (not all enabled by default): 
 
@@ -31,7 +31,7 @@ The integration polls the [local API](https://weatherlink.github.io/weatherlink-
 | Indoor Dew Point   | Rain Storm Start       | Wind Gust Last 10 Min               |                        |
 | Indoor Heat Index  | Rain Storm End         | Wind Gust Direction Last 10 Min     |                        |
 
-This integration also now supports the [local api](https://weatherlink.github.io/airlink-local-api/) of the [Davis AirLink Air Quality Monitor](https://www.davisinstruments.com/pages/airlink) device with all 24 sensors. 
+This integration also supports the [local api](https://weatherlink.github.io/airlink-local-api/) of the [Davis AirLink Air Quality Monitor](https://www.davisinstruments.com/pages/airlink) device with all 24 sensors. 
 
 | Standard    | Particulate Matter | PM Averages         | Diagnostic              |
 |-------------|--------------------|---------------------|-------------------------|
@@ -107,6 +107,10 @@ In the event you are experiencing a problem with this integration, please make s
 On the [Davis WeatherLink Live 6100](https://my.home-assistant.io/redirect/integration/?domain=davis_weatherlink_live) integration page, you can also enable debug logging so all logs show up in your [Home Assistant Core logging page](https://my.home-assistant.io/redirect/logs/?).  
 
 If you continue to have an issue, please open an issue [here](https://github.com/stevesinchak/ha-weatherlink-live/issues). 
+
+## Project Support
+
+If you are a happy user and would like to support the project, please contribute to the project by opening an issue, enhancement request, start a discussion, or submit a pull request to make it better. Thank you -Steve
 
 ### Home Assistant Integration Quality Scale Report
 
