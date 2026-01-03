@@ -256,6 +256,20 @@
                     "api_host": "Host or IP Address of your WeatherLink Live device",
                     "api_path": "API endpoint on your WeatherLink Live device",
                     "update_interval": "Amount of time between sensor updates in seconds"
+                },
+                 "sections": {
+                    "cache_section": {
+                        "name": "Optional: Advanced Data Caching",
+                        "description": "If a Davis WeatherLink Live or AirLink device is temporarily unreachable due to connectivity issues or simultaneous API usage, Home Assistant sensors will display as “Unavailable.” Advanced data caching reuses the last successful API response to bridge short outages, but cached data will eventually expire to prevent prolonged reporting of stale values if the API remains down. ",
+                        "data": {
+                            "cache": "Use Cached Data when Davis API is busy/unavailable",
+                            "cache_age": "Cached Data Expiration (only applicable if caching is enabled above)"
+                        },
+                        "data_description": {
+                            "cache": "Prevents “Unavailable” sensor values until cache expires",
+                            "cache_age": "Amount of time in Seconds before cached data is discarded and sensors display “Unavailable”"
+                        }
+                    }
                 }
             }
         },
@@ -276,6 +290,20 @@
                     "api_host": "Host or IP Address of your WeatherLink Live or AirLink device",
                     "api_path": "API endpoint on your WeatherLink Live or AirLink device",
                     "update_interval": "Amount of time between sensor updates in seconds"
+                },
+                "sections": {
+                    "cache_section": {
+                        "name": "Optional: Advanced Data Caching",
+                        "description": "If a Davis WeatherLink Live or AirLink device is temporarily unreachable due to connectivity issues or simultaneous API usage, Home Assistant sensors will display as “Unavailable.” Advanced data caching reuses the last successful API response to bridge short outages, but cached data will eventually expire to prevent prolonged reporting of stale values if the API remains down.",
+                        "data": {
+                            "cache": "Use Cached Data when Davis API is busy/unavailable",
+                            "cache_age": "Cached Data Expiration (only applicable if caching is enabled above)"
+                        },
+                        "data_description": {
+                            "cache": "Prevents “Unavailable” sensor values until cache expires",
+                            "cache_age": "Amount of time in Seconds before cached data is discarded and sensors display “Unavailable”"
+                        }
+                    }
                 }
             }
         },

@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import datetime, timezone
+
+import aiohttp
 
 from .const import API_TIMEOUT
 
@@ -96,12 +99,26 @@ class DavisWeatherLinkLive:
 
         weather_data = {}
 
+        # Check if the API response has errors first
+        if data.get("data", {}).get("error") is not None:
+            _LOGGER.error(
+                "Parsed Response API error: %s",
+                data.get("data", {}).get("error"),
+            )
+            return weather_data
+
         # Check if the API response is all wrong
         if data.get("data", {}) is None:
-            _LOGGER.error("Davis API response missing data object: %s", data.get("error"))
+            _LOGGER.error(
+                "Parsed Response API response missing data object: %s",
+                data.get("error"),
+            )
             return weather_data
         elif data.get("data", {}).get("conditions") is None:
-            _LOGGER.error("Davis API response missing conditions object: %s", data.get("error"))
+            _LOGGER.error(
+                "Parsed Response API response missing conditions object: %s",
+                data.get("error"),
+            )
             return weather_data
 
         weather_data.update(
@@ -304,7 +321,7 @@ class DavisWeatherLinkLive:
                         "heat_index_in" + unique_key: condition.get("heat_index_in"),
                     }
                 )
-                
+
             elif data_type == 6:  # Air Quality Monitor
                 unique_id = condition.get("lsid")
                 unique_key = f"_ls{unique_id}"
@@ -328,9 +345,7 @@ class DavisWeatherLinkLive:
                         "pm_2p5_last_3_hours" + unique_key: condition.get(
                             "pm_2p5_last_3_hours"
                         ),
-                        "pm_2p5_nowcast" + unique_key: condition.get(
-                            "pm_2p5_nowcast"
-                        ),
+                        "pm_2p5_nowcast" + unique_key: condition.get("pm_2p5_nowcast"),
                         "pm_2p5_last_24_hours" + unique_key: condition.get(
                             "pm_2p5_last_24_hours"
                         ),
@@ -344,7 +359,8 @@ class DavisWeatherLinkLive:
                         "pm_10_last_24_hours" + unique_key: condition.get(
                             "pm_10_last_24_hours"
                         ),
-                        "last_report_time" + unique_key: DavisWeatherLinkLive.unix_to_datetime(
+                        "last_report_time"
+                        + unique_key: DavisWeatherLinkLive.unix_to_datetime(
                             condition.get("last_report_time")
                         ),
                         "pct_pm_data_last_1_hour" + unique_key: condition.get(
@@ -369,21 +385,32 @@ class DavisWeatherLinkLive:
     async def get_weather_data(self):
         """Fetch weather data from API and parse JSON response."""
 
-        # Old Requests based method
-        # response = requests.get(self.api_url, timeout=API_TIMEOUT)
-        # if response.status_code != 200:
-        #    raise Exception(f"API request failed with status {response.status_code}")
+        try:
+            async with self.injected_websession.get(
+                self.api_url, timeout=API_TIMEOUT
+            ) as response:
+                if response.status != 200:
+                    _LOGGER.error(
+                        "received unsuccessful API status code %s",
+                        response.status,
+                    )
 
-        # data = response.json()
-        # return self.parse_weather_data(data)
+                    raise Exception(
+                        f"Davis API responded with unsuccessful status code {response.status}"
+                    )
+                return self.parse_weather_data(await response.json())
 
-        # New injected-websession based method, cool!
+        except aiohttp.ClientConnectorError as e:
+            return self.parse_weather_data(
+                {"data": {"error": "aiohttp.ClientConnectorError connecting to API"}}
+            )
 
-        async with self.injected_websession.get(
-            self.api_url, timeout=API_TIMEOUT
-        ) as response:
-            if response.status != 200:
-                raise Exception(
-                    f"Weather API request failed with status {response.status}"
-                )
-            return self.parse_weather_data(await response.json())
+        except asyncio.TimeoutError as e:
+            return self.parse_weather_data(
+                {"data": {"error": "asyncio.TimeoutError connecting to API"}}
+            )
+
+        except aiohttp.ClientError as e:
+            return self.parse_weather_data(
+                {"data": {"error": "aiohttp.ClientError connecting to API"}}
+            )
