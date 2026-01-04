@@ -96,6 +96,8 @@ This feature is helpful if your Home Assistant server and WeatherLink Live have 
 
 When caching is enabled, if the API is unreachable, the integration will reuse the last successful API response to populate sensor values until the cache expires. This prevents sensors from going to an "unavailable" state during short outages or device busy scenarios. You can set the cache expiration time (in seconds) to control how long cached data is used before giving up and marking sensors as unavailable. A reasonable cache expiration value is between 10 and 60 seconds to balance data freshness with reliability.
 
+If you would like to use this feature, go to the [Davis WeatherLink Live](https://my.home-assistant.io/redirect/integration/?domain=davis_weatherlink_live) integration page, hit the `CONFIGURE` button, and expand the `Optional: Advanced Data Caching` section. Check the box to enable caching and set the cache expiration time. Hit `SUBMIT` to save your changes.
+
 ## Removal
 
 The integration can be uninstalled and removed with three steps:
