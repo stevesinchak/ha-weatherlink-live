@@ -15,8 +15,10 @@ from homeassistant.config_entries import (
     OptionsFlowWithConfigEntry,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import section
+from homeassistant.helpers.selector import selector
 
-from .const import API_INITIAL_INTERVAL, API_PATH, DOMAIN
+from .const import API_INITIAL_INTERVAL, API_INITIAL_MAX_CACHE_AGE, API_PATH, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,6 +90,17 @@ class WeatherStationConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Required(
                     "update_interval", default=API_INITIAL_INTERVAL
                 ): cv.positive_int,
+                vol.Required("cache_section"): section(
+                    vol.Schema(
+                        {
+                            vol.Required("cache", default=False): bool,
+                            vol.Required(
+                                "cache_age", default=API_INITIAL_MAX_CACHE_AGE
+                            ): cv.positive_int,
+                        }
+                    ),
+                    {"collapsed": True},
+                ),
             }
         )
 
@@ -99,6 +112,8 @@ class WeatherStationConfigFlow(ConfigFlow, domain=DOMAIN):
                 "api_host": "The hostname or IP address of the WeatherLink Live device.",
                 "api_path": "The API path for accessing the WeatherLink Live data.",
                 "update_interval": "The interval (in seconds) at which data should be updated.",
+                "cache": "Enable or disable caching of API responses for device connection issues.",
+                "cache_age": "The maximum age (in seconds) of cached data before it is considered expired.",
             },
         )
 
@@ -143,6 +158,25 @@ class WeatherStationOptionsFlow(OptionsFlowWithConfigEntry):
                         "update_interval", API_INITIAL_INTERVAL
                     ),
                 ): cv.positive_int,
+                vol.Required("cache_section"): section(
+                    vol.Schema(
+                        {
+                            vol.Required(
+                                "cache",
+                                default=self.config_entry.options.get(
+                                    "cache_section", {}
+                                ).get("cache", False),
+                            ): bool,
+                            vol.Required(
+                                "cache_age",
+                                default=self.config_entry.options.get(
+                                    "cache_section", {}
+                                ).get("cache_age", API_INITIAL_MAX_CACHE_AGE),
+                            ): cv.positive_int,
+                        }
+                    ),
+                    {"collapsed": True},
+                ),
             }
         )
 
@@ -154,5 +188,7 @@ class WeatherStationOptionsFlow(OptionsFlowWithConfigEntry):
                 "api_host": "The hostname or IP address of the WeatherLink Live device.",
                 "api_path": "The API path for accessing the WeatherLink Live data.",
                 "update_interval": "The interval (in seconds) at which data should be updated.",
+                "cache": "Enable or disable caching of API responses for device connection issues.",
+                "cache_age": "The maximum age (in seconds) of cached data before it is considered expired.",
             },
         )
