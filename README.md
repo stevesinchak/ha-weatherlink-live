@@ -88,7 +88,7 @@ This integration also supports the [local api](https://weatherlink.github.io/air
 
 **Note: You may want to disable specific device sensors that are not relevant for your device hardware. Unfortunately, the Davis WeatherLink Live API does not provide a good way for this integration to identify specific sensors that are not present, as the actual sensor device model sending the data to the WeatherLink Live is not available in the local API. I explored automatically disabling sensors that have null or zero values upon setup, but observed that this was not a reliable technique, as some sensors would send actual data later, or a zero value is legitimate in many cases (no wind). If anyone has a better approach, please [start a discussion here](https://github.com/stevesinchak/ha-weatherlink-live/discussions).**
 
-At any point, you can update the configuration you specified while adding the integration by simply going to the [Davis WeatherLink Live 6100](https://my.home-assistant.io/redirect/integration/?domain=davis_weatherlink_live) page and hitting the `CONFIGURE` button. This is helpful if you would like to adjust the Update Interval. 
+At any point, you can update the configuration you specified while adding the integration by simply going to the [Davis WeatherLink Live 6100](https://my.home-assistant.io/redirect/integration/?domain=davis_weatherlink_live) page and hitting the :gear: `Gear` button. This is helpful if you would like to adjust the Update Interval. 
 
 ## Optional Advanced Data Caching
 
@@ -96,13 +96,13 @@ This feature is helpful if your Home Assistant server and WeatherLink Live have 
 
 When caching is enabled, if the API is unreachable, the integration will reuse the last successful API response to populate sensor values until the cache expires. This prevents sensors from going to an "unavailable" state during short outages or device busy scenarios. You can set the cache expiration time (in seconds) to control how long cached data is used before giving up and marking sensors as unavailable. A reasonable cache expiration value is between 10 and 60 seconds to balance data freshness with reliability.
 
-If you would like to use this feature, go to the [Davis WeatherLink Live](https://my.home-assistant.io/redirect/integration/?domain=davis_weatherlink_live) integration page, hit the `CONFIGURE` button, and expand the `Optional: Advanced Data Caching` section. Check the box to enable caching and set the cache expiration time. Hit `SUBMIT` to save your changes.
+If you would like to use this feature, go to the [Davis WeatherLink Live](https://my.home-assistant.io/redirect/integration/?domain=davis_weatherlink_live) integration page, hit the :gear: `Gear` button, and expand the `Optional: Advanced Data Caching` section. Check the box to enable caching and set the cache expiration time. Hit `SUBMIT` to save your changes.
 
 ## Removal
 
 The integration can be uninstalled and removed with three steps:
 
-1. Go to the [Davis WeatherLink Live 6100](https://my.home-assistant.io/redirect/integration/?domain=davis_weatherlink_live) integration page, click on the three dots to the right of the `CONFIGURE` button, and select `Delete`. Hit `DELETE` again on the confirmation screen. The device and sensor entities have been deleted, and the integration is no longer active. 
+1. Go to the [Davis WeatherLink Live 6100](https://my.home-assistant.io/redirect/integration/?domain=davis_weatherlink_live) integration page, click on the three dots to the right of the :gear: `Gear` button, and select `Delete`. Hit `DELETE` again on the confirmation screen. The device and sensor entities have been deleted, and the integration is no longer active. 
 
 2. Delete the entire `davis_weatherlink_live` directory from the `custom_components` directory on to completely remove the inactive integration from your system. 
 
