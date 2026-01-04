@@ -61,7 +61,7 @@ This integration also supports the [local api](https://weatherlink.github.io/air
 
 2. Copy and paste the URL of this repository `https://github.com/stevesinchak/ha-weatherlink-live` and set the Type to `Integration` and hit Add. 
 
-3. Then just search for `Davis WeatherLink Live` and click on the listing.  Scroll down and hit Download to install.  
+3. Then just search for `Davis WeatherLink Live` and click on the listing. Scroll down and hit Download to install. 
 
 4. Reboot your Home Assistant server, and you are ready to configure.
 
@@ -72,23 +72,29 @@ This integration also supports the [local api](https://weatherlink.github.io/air
 
     * Auto Discovery: If the WeatherLink Live is on the same network as your Home Assistant Server, the device should be auto-detected (thanks to Zeroconf) within a few minutes and will be listed under the Discovered section. Go to your [Home Assistant Integrations dashboard](https://my.home-assistant.io/redirect/integrations/) and hit the Add button, and jump to step 4. 
 
-    * Manual Add: [Click this link to add the integration manually](https://my.home-assistant.io/redirect/config_flow_start/?domain=davis_weatherlink_live).  
+    * Manual Add: [Click this link to add the integration manually](https://my.home-assistant.io/redirect/config_flow_start/?domain=davis_weatherlink_live). 
 
-2. Depending on how the integration was added in the previous step, all fields may be pre-populated, but are available to be adjusted.  There are three fields total:
+2. Depending on how the integration was added in the previous step, all fields may be pre-populated, but are available to be adjusted. There are three fields total:
 
     * API Host: The ip address or hostname of your Davis WeatherLink Live
 
     * API Path: Path to the API Endpoint (leave at the default unless this changes in a future device firmware update)
 
-    * Update Interval: How frequently you want the integration to capture new data, measured in seconds.  I set mine to 10 seconds as I prefer to capture detailed wind data. In other cases, a simple 5-minute interval, 300 seconds, is sufficient. **Note:** *The Davis WeatherLink Live only updates the API every 10 seconds; intervals lower than 10 may result in errors and/or duplicate data, so the integration will not accept values below 10.*
+    * Update Interval: How frequently you want the integration to capture new data, measured in seconds. I set mine to 10 seconds as I prefer to capture detailed wind data. In other cases, a simple 5-minute interval, 300 seconds, is sufficient. **Note:** *The Davis WeatherLink Live only updates the API every 10 seconds; intervals lower than 10 may result in errors and/or duplicate data, so the integration will not accept values below 10.*
 
     Hit `SUBMIT` when you are ready to proceed with setup.
 
+### Optional Advanced Data Caching
+
+This feature is helpful if your Home Assistant server and WeatherLink Live have unreliable connectivity or if the Davis device is busy (multiple clients are accessing the API at the same time). The Davis hardware is designed to respond to one request at a time and does not support queuing of requests. If a new API request is received while it is still processing a previous request, the new request will automatically have its connection terminated. That will result in Home Assistant marking the sensors as "unavailable" until the next successful API response.
+
+When caching is enabled, if the API is unreachable, the integration will reuse the last successful API response to populate sensor values until the cache expires. This prevents sensors from going to an "unavailable" state during short outages or device busy scenarios. You can set the cache expiration time (in seconds) to control how long cached data is used before giving up and marking sensors as unavailable. A reasonable cache expiration value is between 10 and 60 seconds to balance data freshness with reliability.
+
 3. The integration will automatically build a device in Home Assistant for each physical device registered on the Davis WeatherLink Live. This includes all potential sensors for the device type listed in the API specification (even if they are not present). On this final setup screen, you will have an opportunity to fine-tune the device names and set the 'Area' you want them to be assigned in Home Assistant. If you are happy with the defaults, hit `SKIP AND FINISH` to complete the setup.
 
-**Note: You may want to disable specific device sensors that are not relevant for your device hardware. Unfortunately, the Davis WeatherLink Live API does not provide a good way for this integration to identify specific sensors that are not present, as the actual sensor device model sending the data to the WeatherLink Live is not available in the local API. I explored automatically disabling sensors that have null or zero values upon setup, but observed that this was not a reliable technique, as some sensors would send actual data later, or a zero value is legitimate in many cases (no wind).  If anyone has a better approach, please [start a discussion here](https://github.com/stevesinchak/ha-weatherlink-live/discussions).**
+**Note: You may want to disable specific device sensors that are not relevant for your device hardware. Unfortunately, the Davis WeatherLink Live API does not provide a good way for this integration to identify specific sensors that are not present, as the actual sensor device model sending the data to the WeatherLink Live is not available in the local API. I explored automatically disabling sensors that have null or zero values upon setup, but observed that this was not a reliable technique, as some sensors would send actual data later, or a zero value is legitimate in many cases (no wind). If anyone has a better approach, please [start a discussion here](https://github.com/stevesinchak/ha-weatherlink-live/discussions).**
 
-At any point, you can update the configuration you specified while adding the integration by simply going to the [Davis WeatherLink Live 6100](https://my.home-assistant.io/redirect/integration/?domain=davis_weatherlink_live) page and hitting the `CONFIGURE` button. This is helpful if you would like to adjust the Update Interval.  
+At any point, you can update the configuration you specified while adding the integration by simply going to the [Davis WeatherLink Live 6100](https://my.home-assistant.io/redirect/integration/?domain=davis_weatherlink_live) page and hitting the `CONFIGURE` button. This is helpful if you would like to adjust the Update Interval. 
 
 ## Removal
 
@@ -104,9 +110,9 @@ The integration can be uninstalled and removed with three steps:
 
 In the event you are experiencing a problem with this integration, please make sure you have entered the correct API host. It should contain an IP address or a hostname and nothing more (no http:// in front).
 
-On the [Davis WeatherLink Live 6100](https://my.home-assistant.io/redirect/integration/?domain=davis_weatherlink_live) integration page, you can also enable debug logging so all logs show up in your [Home Assistant Core logging page](https://my.home-assistant.io/redirect/logs/?).  
+On the [Davis WeatherLink Live 6100](https://my.home-assistant.io/redirect/integration/?domain=davis_weatherlink_live) integration page, you can also enable debug logging so all logs show up in your [Home Assistant Core logging page](https://my.home-assistant.io/redirect/logs/?). 
 
-If you continue to have an issue, please open an issue [here](https://github.com/stevesinchak/ha-weatherlink-live/issues). 
+If you continue to have an issue, please open an issue [here](https://github.com/stevesinchak/ha-weatherlink-live/issues) and provide copies of logs with debug enabled. 
 
 ## Project Support
 
