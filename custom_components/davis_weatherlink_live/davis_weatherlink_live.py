@@ -96,7 +96,7 @@ class DavisWeatherLinkLive:
         return 0.0 if value is None else value
     
     @staticmethod
-    def generate_unique_key(url: str) -> str:
+    def generate_url_hash(url: str) -> str:
         return hashlib.sha256(url.encode()).hexdigest()[:15]
 
     def parse_weather_data(self, data: dict) -> dict:
@@ -329,7 +329,7 @@ class DavisWeatherLinkLive:
 
             elif data_type == 6:  # Air Quality Monitor
                 unique_id = condition.get("lsid")
-                url_hash = DavisWeatherLinkLive.generate_unique_key(self.api_url)
+                url_hash = DavisWeatherLinkLive.generate_url_hash(self.api_url)
                 unique_key = f"_ls{unique_id}{url_hash}"           
                 weather_data.update(
                     {
