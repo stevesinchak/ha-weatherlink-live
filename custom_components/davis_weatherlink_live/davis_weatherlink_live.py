@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import logging
 from datetime import datetime, timezone
 
@@ -93,6 +94,10 @@ class DavisWeatherLinkLive:
     @staticmethod
     def zero_float_if_none(value: float | None) -> float:
         return 0.0 if value is None else value
+    
+    @staticmethod
+    def generate_unique_key(url: str) -> str:
+        return hashlib.sha256(url.encode()).hexdigest()[:15]
 
     def parse_weather_data(self, data: dict) -> dict:
         _LOGGER.debug("Parsing weather data: %s", data)
@@ -324,7 +329,8 @@ class DavisWeatherLinkLive:
 
             elif data_type == 6:  # Air Quality Monitor
                 unique_id = condition.get("lsid")
-                unique_key = f"_ls{unique_id}"
+                url_hash = DavisWeatherLinkLive.generate_unique_key(self.api_url)
+                unique_key = f"_ls{unique_id}{url_hash}"           
                 weather_data.update(
                     {
                         "lsid" + unique_key: condition.get("lsid"),
