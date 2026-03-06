@@ -48,7 +48,7 @@ def get_device_name(condition: tuple):
 
 
 # Device Sensor type helper that returns the correct sensors based on the device type
-def get_device_sensors(condition: tuple):
+def get_device_sensors(condition: tuple, deviceID: str):
     device_type = condition.get("data_structure_type")
 
     # Return the correct sensors based on the device type
@@ -636,7 +636,8 @@ def get_device_sensors(condition: tuple):
 
     elif device_type == 6:  # WeatherLink Air Quality Monitors
         unique_id = condition.get("lsid")
-        unique_key = f"_ls{unique_id}"
+        unique_key = f"_ls{unique_id}{deviceID}"
+        _LOGGER.debug("Unique Key: %s", unique_key)
         # Device Sensor Type 6: Weatherlink AQI Conditions
         DST_6: tuple[SensorEntityDescription, ...] = (
             SensorEntityDescription(
@@ -829,9 +830,6 @@ def get_device_sensors(condition: tuple):
         return tuple()
 
 
-# TODO - Device Sensor Type 2: Soil Moisture Sensors
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: MyConfigEntry,
@@ -855,7 +853,7 @@ async def async_setup_entry(
         device_name = get_device_name(condition)
         sensors = [
             WeatherSensor(coordinator, description, device_id, device_name)
-            for description in get_device_sensors(condition)
+            for description in get_device_sensors(condition, str(config_entry.entry_id))
         ]
         async_add_entities(sensors)
 

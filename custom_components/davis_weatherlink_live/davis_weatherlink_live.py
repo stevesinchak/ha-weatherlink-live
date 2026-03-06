@@ -21,9 +21,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class DavisWeatherLinkLive:
-    def __init__(self, api_url, websession):
+    def __init__(self, api_url, websession, deviceID):
         self.api_url = api_url
         self.injected_websession = websession
+        self.deviceID = deviceID
 
     # POSIX / unix timestamp to datetime object
     @staticmethod
@@ -329,8 +330,9 @@ class DavisWeatherLinkLive:
 
             elif data_type == 6:  # Air Quality Monitor
                 unique_id = condition.get("lsid")
-                url_hash = DavisWeatherLinkLive.generate_url_hash(self.api_url)
-                unique_key = f"_ls{unique_id}{url_hash}"           
+                unique_key = f"_ls{unique_id}{self.deviceID}"   
+                _LOGGER.debug("Unique Key: %s", unique_key)
+        
                 weather_data.update(
                     {
                         "lsid" + unique_key: condition.get("lsid"),
