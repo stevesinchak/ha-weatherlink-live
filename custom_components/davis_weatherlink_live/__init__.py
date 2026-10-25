@@ -6,10 +6,11 @@ import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from awesomeversion import AwesomeVersion
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import Platform, __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -18,6 +19,8 @@ from .const import DOMAIN
 from .coordinator import WeatherCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+MIN_HA_VERSION = "2026.7.0"  # UnitOfDensity, used in sensor.py
 
 # ----------------------------------------------------------------------------
 # A list of the different platforms we wish to setup.
@@ -39,6 +42,11 @@ class RuntimeData:
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: MyConfigEntry) -> bool:
     """Set up Example Integration from a config entry."""
+    if AwesomeVersion(HA_VERSION) < MIN_HA_VERSION:
+        raise ConfigEntryError(
+            f"Davis WeatherLink Live requires Home Assistant {MIN_HA_VERSION} or newer "
+            f"(running {HA_VERSION}). Please upgrade Home Assistant."
+        )
 
     # ----------------------------------------------------------------------------
     # Initialise the coordinator that manages data updates from your api.

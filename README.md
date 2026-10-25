@@ -49,6 +49,8 @@ This integration also supports the [local api](https://weatherlink.github.io/air
 
 ## Installation
 
+> **Requires Home Assistant 2026.7.0 or newer.** On older versions the integration will fail to load.
+
 **Install with File Copy**
 
 1. Copy the entire `davis_weatherlink_live` directory from this repository into the `custom_components` directory on your Home Assistant installation. `custom_components` is nested within the base Home Assistant `config` directory; if it does not exist, you can create it. Tip: Use the [Studio Code Server](https://github.com/hassio-addons/addon-vscode/blob/main/vscode/DOCS.md) add-on for an easy way to navigate the file system and upload files.

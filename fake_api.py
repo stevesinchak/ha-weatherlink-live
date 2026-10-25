@@ -1,3 +1,5 @@
+#Davis WeatherLink Live Simulator for testing Home Assistant integration
+ 
 import json
 import random
 import time
