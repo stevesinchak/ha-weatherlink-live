@@ -2,22 +2,24 @@
 
 from __future__ import annotations
 
+import logging
+
 from homeassistant.components.sensor import (
-    SensorStateClass,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    UnitOfDensity,
+    UnitOfIrradiance,
     UnitOfLength,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfVolumetricFlux,
-    UnitOfIrradiance,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -27,8 +29,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import MyConfigEntry
 from .const import DOMAIN
 from .coordinator import WeatherCoordinator
-
-import logging
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -691,98 +691,98 @@ def get_device_sensors(condition: tuple, deviceID: str):
             SensorEntityDescription(
                 key="pm_1_last" + unique_key,
                 translation_key="pm_1_last",
-                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
                 device_class=SensorDeviceClass.PM1,
                 state_class=SensorStateClass.MEASUREMENT,
             ),
             SensorEntityDescription(
                 key="pm_2p5_last" + unique_key,
                 translation_key="pm_2p5_last",
-                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
                 device_class=SensorDeviceClass.PM25,
                 state_class=SensorStateClass.MEASUREMENT,
             ),
             SensorEntityDescription(
                 key="pm_10_last" + unique_key,
                 translation_key="pm_10_last",
-                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
                 device_class=SensorDeviceClass.PM10,
                 state_class=SensorStateClass.MEASUREMENT,
             ),
             SensorEntityDescription(
                 key="pm_1" + unique_key,
                 translation_key="pm_1",
-                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
                 device_class=SensorDeviceClass.PM1,
                 state_class=SensorStateClass.MEASUREMENT,
             ),
             SensorEntityDescription(
                 key="pm_2p5" + unique_key,
                 translation_key="pm_2p5",
-                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
                 device_class=SensorDeviceClass.PM25,
                 state_class=SensorStateClass.MEASUREMENT,
             ),
             SensorEntityDescription(
                 key="pm_10" + unique_key,
                 translation_key="pm_10",
-                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
                 device_class=SensorDeviceClass.PM10,
                 state_class=SensorStateClass.MEASUREMENT,
             ),
             SensorEntityDescription(
                 key="pm_2p5_last_1_hour" + unique_key,
                 translation_key="pm_2p5_last_1_hour",
-                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
                 device_class=SensorDeviceClass.PM25,
                 state_class=SensorStateClass.MEASUREMENT,
             ),
             SensorEntityDescription(
                 key="pm_2p5_last_3_hours" + unique_key,
                 translation_key="pm_2p5_last_3_hours",
-                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
                 device_class=SensorDeviceClass.PM25,
                 state_class=SensorStateClass.MEASUREMENT,
             ),
             SensorEntityDescription(
                 key="pm_2p5_nowcast" + unique_key,
                 translation_key="pm_2p5_nowcast",
-                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
                 device_class=SensorDeviceClass.PM25,
                 state_class=SensorStateClass.MEASUREMENT,
             ),
             SensorEntityDescription(
                 key="pm_2p5_last_24_hours" + unique_key,
                 translation_key="pm_2p5_last_24_hours",
-                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
                 device_class=SensorDeviceClass.PM25,
                 state_class=SensorStateClass.MEASUREMENT,
             ),
             SensorEntityDescription(
                 key="pm_10_last_1_hour" + unique_key,
                 translation_key="pm_10_last_1_hour",
-                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
                 device_class=SensorDeviceClass.PM10,
                 state_class=SensorStateClass.MEASUREMENT,
             ),
             SensorEntityDescription(
                 key="pm_10_last_3_hours" + unique_key,
                 translation_key="pm_10_last_3_hours",
-                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
                 device_class=SensorDeviceClass.PM10,
                 state_class=SensorStateClass.MEASUREMENT,
             ),
             SensorEntityDescription(
                 key="pm_10_nowcast" + unique_key,
                 translation_key="pm_10_nowcast",
-                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
                 device_class=SensorDeviceClass.PM10,
                 state_class=SensorStateClass.MEASUREMENT,
             ),
             SensorEntityDescription(
                 key="pm_10_last_24_hours" + unique_key,
                 translation_key="pm_10_last_24_hours",
-                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
                 device_class=SensorDeviceClass.PM10,
                 state_class=SensorStateClass.MEASUREMENT,
             ),
