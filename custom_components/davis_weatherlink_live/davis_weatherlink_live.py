@@ -2,12 +2,8 @@
 
 from __future__ import annotations
 
-import asyncio
-import hashlib
 import logging
 from datetime import datetime, timezone
-
-import aiohttp
 
 from .const import API_TIMEOUT
 
@@ -18,6 +14,10 @@ _LOGGER = logging.getLogger(__name__)
 
 # AirLink API Reference: https://weatherlink.github.io/airlink-local-api/
 # https://github.com/weatherlink/airlink-local-api/blob/master/index.md
+
+
+class DavisApiError(Exception):
+    """The device answered, but not with usable data."""
 
 
 class DavisWeatherLinkLive:
@@ -76,17 +76,16 @@ class DavisWeatherLinkLive:
 
     # Rainfall amount calculation based on rain value depending on cup size of weather station
     @staticmethod
-    def calculate_rain_amount(rain_amount: int, rain_unit: int) -> float:
-        # Check for valid cup size indicator
-        if rain_unit not in range(1, 5):
-            raise ValueError("cup size indicator must be between 1 and 4")
+    def calculate_rain_amount(rain_amount: int, rain_unit: int) -> float | None:
+        factor = {1: 0.01, 2: 0.2, 3: 0.1, 4: 0.001}.get(rain_unit)
+        if factor is None:  # unknown cup size
+            return None
 
-        # Check for valid rain amount as rain can't be negative or null
+        # Rain can't be negative or null
         if not isinstance(rain_amount, (int, float)) or rain_amount <= 0:
             return 0.0
 
-        conversion_factors = {1: 0.01, 2: 0.2, 3: 0.1, 4: 0.001}
-        return rain_amount * conversion_factors.get(rain_unit, 0)
+        return rain_amount * factor
 
     @staticmethod
     def zero_if_none(value: int | None) -> int:
@@ -95,44 +94,18 @@ class DavisWeatherLinkLive:
     @staticmethod
     def zero_float_if_none(value: float | None) -> float:
         return 0.0 if value is None else value
-    
-    @staticmethod
-    def generate_url_hash(url: str) -> str:
-        return hashlib.sha256(url.encode()).hexdigest()[:15]
 
     def parse_weather_data(self, data: dict) -> dict:
         _LOGGER.debug("Parsing weather data: %s", data)
 
-        weather_data = {}
+        body = data.get("data") or {}
+        if data.get("error"):  # WLL sends null, AirLink sends 0 for "no error"
+            raise DavisApiError(f"API returned error: {data.get('error')}")
+        if body.get("conditions") is None:
+            raise DavisApiError("API response missing conditions")
 
-        # Check if the API response has errors first
-        if data.get("data", {}).get("error") is not None:
-            _LOGGER.error(
-                "Parsed Response API error: %s",
-                data.get("data", {}).get("error"),
-            )
-            return weather_data
-
-        # Check if the API response is all wrong
-        if data.get("data", {}) is None:
-            _LOGGER.error(
-                "Parsed Response API response missing data object: %s",
-                data.get("error"),
-            )
-            return weather_data
-        elif data.get("data", {}).get("conditions") is None:
-            _LOGGER.error(
-                "Parsed Response API response missing conditions object: %s",
-                data.get("error"),
-            )
-            return weather_data
-
-        weather_data.update(
-            {
-                "raw_api": data,
-            }
-        )
-        for condition in data.get("data", {}).get("conditions", []):
+        weather_data = {"raw_api": data}
+        for condition in body["conditions"]:
             data_type = condition.get("data_structure_type")
 
             if data_type == 1:  # ISS Current Conditions record (outside)
@@ -140,6 +113,7 @@ class DavisWeatherLinkLive:
                 weather_data.update(
                     {
                         "lsid" + unique_key: condition.get("lsid"),
+                        "data_structure_type" + unique_key: data_type,
                         "txid" + unique_key: condition.get("txid"),
                         "temp" + unique_key: condition.get("temp"),
                         "hum" + unique_key: condition.get("hum"),
@@ -281,6 +255,7 @@ class DavisWeatherLinkLive:
                 weather_data.update(
                     {
                         "lsid" + unique_key: condition.get("lsid"),
+                        "data_structure_type" + unique_key: data_type,
                         "txid" + unique_key: condition.get("txid"),
                         "temp_1" + unique_key: condition.get("temp_1"),
                         "temp_2" + unique_key: condition.get("temp_2"),
@@ -309,6 +284,7 @@ class DavisWeatherLinkLive:
                 weather_data.update(
                     {
                         "lsid" + unique_key: condition.get("lsid"),
+                        "data_structure_type" + unique_key: data_type,
                         "bar_sea_level" + unique_key: condition.get("bar_sea_level"),
                         "bar_trend" + unique_key: condition.get("bar_trend"),
                         "bar_absolute" + unique_key: condition.get("bar_absolute"),
@@ -321,6 +297,7 @@ class DavisWeatherLinkLive:
                 weather_data.update(
                     {
                         "lsid" + unique_key: condition.get("lsid"),
+                        "data_structure_type" + unique_key: data_type,
                         "temp_in" + unique_key: condition.get("temp_in"),
                         "hum_in" + unique_key: condition.get("hum_in"),
                         "dew_point_in" + unique_key: condition.get("dew_point_in"),
@@ -330,12 +307,11 @@ class DavisWeatherLinkLive:
 
             elif data_type == 6:  # Air Quality Monitor
                 unique_id = condition.get("lsid")
-                unique_key = f"_ls{unique_id}{self.deviceID}"   
-                _LOGGER.debug("Unique Key: %s", unique_key)
-        
+                unique_key = f"_ls{unique_id}{self.deviceID}"
                 weather_data.update(
                     {
                         "lsid" + unique_key: condition.get("lsid"),
+                        "data_structure_type" + unique_key: data_type,
                         "temp" + unique_key: condition.get("temp"),
                         "hum" + unique_key: condition.get("hum"),
                         "dew_point" + unique_key: condition.get("dew_point"),
@@ -390,35 +366,16 @@ class DavisWeatherLinkLive:
 
         return weather_data
 
-    async def get_weather_data(self):
-        """Fetch weather data from API and parse JSON response."""
+    async def get_weather_data(self) -> dict:
+        """Fetch weather data from API and parse JSON response.
 
-        try:
-            async with self.injected_websession.get(
-                self.api_url, timeout=API_TIMEOUT
-            ) as response:
-                if response.status != 200:
-                    _LOGGER.error(
-                        "received unsuccessful API status code %s",
-                        response.status,
-                    )
-
-                    raise Exception(
-                        f"Davis API responded with unsuccessful status code {response.status}"
-                    )
-                return self.parse_weather_data(await response.json())
-
-        except aiohttp.ClientConnectorError as e:
-            return self.parse_weather_data(
-                {"data": {"error": "aiohttp.ClientConnectorError connecting to API"}}
-            )
-
-        except asyncio.TimeoutError as e:
-            return self.parse_weather_data(
-                {"data": {"error": "asyncio.TimeoutError connecting to API"}}
-            )
-
-        except aiohttp.ClientError as e:
-            return self.parse_weather_data(
-                {"data": {"error": "aiohttp.ClientError connecting to API"}}
-            )
+        Raises aiohttp.ClientError, TimeoutError or DavisApiError on failure.
+        """
+        async with self.injected_websession.get(
+            self.api_url, timeout=API_TIMEOUT
+        ) as response:
+            if response.status != 200:
+                raise DavisApiError(
+                    f"Davis API responded with unsuccessful status code {response.status}"
+                )
+            return self.parse_weather_data(await response.json())
