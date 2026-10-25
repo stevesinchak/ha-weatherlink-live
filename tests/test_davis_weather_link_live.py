@@ -35,13 +35,28 @@ class TestDavisWeatherLinkLive:
     def test_calculate_rain_amount(self):
         assert self.davis.calculate_rain_amount(10, 1) == pytest.approx(0.1)
         assert self.davis.calculate_rain_amount(10, 2) == pytest.approx(2.0)
-        assert self.davis.calculate_rain_amount(None, 1) == 0.0
+        assert self.davis.calculate_rain_amount(0, 1) == 0.0
+        assert self.davis.calculate_rain_amount(None, 1) is None  # missing data
         assert self.davis.calculate_rain_amount(10, None) is None  # unknown cup size
 
     def test_parse_rejects_bad_payloads(self):
         for payload in ({"data": None}, {"data": {}}, {"data": {"conditions": []}, "error": "busy"}):
             with pytest.raises(DavisApiError):
                 self.davis.parse_weather_data(payload)
+
+    def test_parse_null_rain(self):
+        # Null yearly total must stay unknown (a 0 would look like a reset to HA)
+        payload = {
+            "data": {
+                "conditions": [
+                    {"data_structure_type": 1, "txid": 1, "rain_size": 1, "rainfall_year": None, "rain_storm": None}
+                ]
+            },
+            "error": None,
+        }
+        data = self.davis.parse_weather_data(payload)
+        assert data["rainfall_year_tx1"] is None
+        assert data["rain_storm_tx1"] == 0.0  # null means no storm in progress
 
     def test_parse_iss_record(self):
         payload = {

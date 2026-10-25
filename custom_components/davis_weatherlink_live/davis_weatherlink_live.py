@@ -81,7 +81,8 @@ class DavisWeatherLinkLive:
         if factor is None:  # unknown cup size
             return None
 
-        # Rain can't be negative or null
+        if rain_amount is None:  # no data (e.g. signal lost): unknown, not 0, so totals don't "reset"
+            return None
         if not isinstance(rain_amount, (int, float)) or rain_amount <= 0:
             return 0.0
 
@@ -206,7 +207,9 @@ class DavisWeatherLinkLive:
                         ),
                         "rain_storm"
                         + unique_key: DavisWeatherLinkLive.calculate_rain_amount(
-                            condition.get("rain_storm"), condition.get("rain_size")
+                            # API sends null when no storm is in progress: show 0
+                            DavisWeatherLinkLive.zero_if_none(condition.get("rain_storm")),
+                            condition.get("rain_size"),
                         ),
                         "rain_storm_start_at"
                         + unique_key: DavisWeatherLinkLive.unix_to_datetime(
