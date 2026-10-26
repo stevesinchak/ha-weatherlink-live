@@ -145,3 +145,15 @@ def test_remove_device_only_when_stale():
     assert can_remove(entry, "entry1123") is False  # still reporting
     assert can_remove(entry, "entry1999") is True  # stale
     assert can_remove(SimpleNamespace(entry_id="entry1"), "entry1123") is True  # entry not loaded
+
+
+def test_validate_host():
+    from custom_components.davis_weatherlink_live.config_flow import _validate
+
+    def errors(host):
+        return _validate({"api_host": host, "update_interval": 30})
+
+    assert errors("weather-httpd.local") == {}
+    assert errors("192.168.1.5") == {}
+    assert errors("http://192.168.1.5") == {"api_host": "api_host_http_not_allowed"}
+    assert errors("HTTPS://wll.local") == {"api_host": "api_host_http_not_allowed"}

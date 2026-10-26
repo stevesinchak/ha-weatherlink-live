@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 def _validate(user_input: dict[str, Any]) -> dict[str, str]:
     """Return form errors keyed by field."""
     errors: dict[str, str] = {}
-    if "http" in user_input["api_host"].lower():
+    if "://" in user_input["api_host"]:  # a URL, not a host (allows e.g. weather-httpd.local)
         errors["api_host"] = "api_host_http_not_allowed"
     if user_input["update_interval"] < 10:
         errors["update_interval"] = "update_interval_too_low"
