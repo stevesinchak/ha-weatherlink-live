@@ -50,7 +50,7 @@ def get_device_name(condition: dict) -> str | None:
 
 # Device Sensor type helper that returns the correct sensors based on the device type
 def get_device_sensors(
-    condition: dict, deviceID: str
+    condition: dict, deviceID: str, did: str | None
 ) -> tuple[SensorEntityDescription, ...]:
     device_type = condition.get("data_structure_type")
 
@@ -63,7 +63,7 @@ def get_device_sensors(
 
     if device_type == 1:  # General weather outdoor sensors
         unique_id = condition.get("txid")
-        unique_key = f"_tx{unique_id}"
+        unique_key = f"_tx{unique_id}_{did}"
         api_rain_size_value = condition.get("rain_size")
 
         rain_rate_unit = {
@@ -401,7 +401,7 @@ def get_device_sensors(
 
     elif device_type == 2:  # Soil Moisture Sensors
         unique_id = condition.get("txid")
-        unique_key = f"_tx{unique_id}"
+        unique_key = f"_tx{unique_id}_{did}"
         DST_2: tuple[SensorEntityDescription, ...] = (
             SensorEntityDescription(
                 key="lsid" + unique_key,
@@ -783,16 +783,16 @@ async def async_setup_entry(
     """Create sensors for every device found in the API response."""
     coordinator = config_entry.runtime_data.coordinator
     entry_id = str(config_entry.entry_id)
+    api_data = coordinator.data["raw_api"]["data"]
+    did = api_data.get("did")
 
     sensors = []
-    for condition in (
-        coordinator.data.get("raw_api", {}).get("data", {}).get("conditions", [])
-    ):
+    for condition in api_data.get("conditions", []):
         device_id = entry_id + str(condition.get("lsid"))
         device_name = get_device_name(condition)
         sensors.extend(
             WeatherSensor(coordinator, description, device_id, device_name)
-            for description in get_device_sensors(condition, entry_id)
+            for description in get_device_sensors(condition, entry_id, did)
         )
     async_add_entities(sensors)
 

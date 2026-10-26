@@ -2,6 +2,7 @@
 
 import asyncio
 import contextlib
+import copy
 import importlib
 import threading
 from http.server import HTTPServer
@@ -52,10 +53,11 @@ def conditions(data):
 
 
 def sensor_keys(data, entry_id):
+    did = data["raw_api"]["data"].get("did")
     return [
         description.key
         for condition in conditions(data)
-        for description in get_device_sensors(condition, entry_id)
+        for description in get_device_sensors(condition, entry_id, did)
     ]
 
 
@@ -82,7 +84,18 @@ def test_unique_ids_dont_collide():
     keys = []
     for module_name, entry_id in zip(SIMULATORS, ("A", "B", "C")):
         with fake_server(module_name) as url:
-            keys += sensor_keys(fetch(url, entry_id), entry_id)
+            data = fetch(url, entry_id)
+        keys += sensor_keys(data, entry_id)
+        if module_name == "fake_api":
+            data_wll = data
+
+    # A second WLL hub: same transmitter channels, but its own hardware id and
+    # its own cloud-assigned lsids (Davis lsids are unique per sensor)
+    second_hub = copy.deepcopy(data_wll["raw_api"])
+    second_hub["data"]["did"] = "SECONDHUB"
+    for condition in second_hub["data"]["conditions"]:
+        condition["lsid"] += 1_000_000
+    keys += sensor_keys(DavisWeatherLinkLive(None, None, "D").parse_weather_data(second_hub), "D")
 
     duplicates = {key for key in keys if keys.count(key) > 1}
     assert not duplicates, f"duplicate unique ids: {duplicates}"

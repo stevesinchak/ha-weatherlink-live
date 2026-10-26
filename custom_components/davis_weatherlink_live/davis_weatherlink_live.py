@@ -100,6 +100,7 @@ class DavisWeatherLinkLive:
         _LOGGER.debug("Parsing weather data: %s", data)
 
         body = data.get("data") or {}
+        did = body.get("did")  # hub hardware id, keeps tx keys unique across hubs
         if data.get("error"):  # WLL sends null, AirLink sends 0 for "no error"
             raise DavisApiError(f"API returned error: {data.get('error')}")
         if body.get("conditions") is None:
@@ -110,7 +111,7 @@ class DavisWeatherLinkLive:
             data_type = condition.get("data_structure_type")
 
             if data_type == 1:  # ISS Current Conditions record (outside)
-                unique_key = f"_tx{condition.get('txid')}"
+                unique_key = f"_tx{condition.get('txid')}_{did}"
                 weather_data.update(
                     {
                         "lsid" + unique_key: condition.get("lsid"),
@@ -254,7 +255,7 @@ class DavisWeatherLinkLive:
                 )
 
             elif data_type == 2:  # Moisture Current Conditions record
-                unique_key = f"_tx{condition.get('txid')}"
+                unique_key = f"_tx{condition.get('txid')}_{did}"
                 weather_data.update(
                     {
                         "lsid" + unique_key: condition.get("lsid"),
