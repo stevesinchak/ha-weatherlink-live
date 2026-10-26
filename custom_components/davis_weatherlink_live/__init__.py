@@ -88,10 +88,17 @@ async def _async_update_listener(hass: HomeAssistant, config_entry: ConfigEntry)
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant, config_entry: MyConfigEntry, device_entry: DeviceEntry
 ) -> bool:
-    """Allow deleting a device from the UI."""
-    return True
+    """Allow deleting a device only if the hub no longer reports it."""
+    runtime = getattr(config_entry, "runtime_data", None)
+    if runtime is None or not runtime.coordinator.data:  # entry not loaded: nothing reporting
+        return True
+    live = {
+        (DOMAIN, config_entry.entry_id + str(c.get("lsid")))
+        for c in runtime.coordinator.data["raw_api"]["data"]["conditions"]
+    }
+    return not (device_entry.identifiers & live)
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: MyConfigEntry) -> bool:

@@ -127,3 +127,21 @@ def test_migrate_entities_cleans_up_duplicates():
     registry = FakeRegistry({"sensor.iss_temp": "temp_tx1", "sensor.iss_temp_2": "temp_tx1_D1"})
     run_migration(registry)
     assert registry.entities == {"sensor.iss_temp": "temp_tx1_D1"}  # original entity (history) wins
+
+
+def test_remove_device_only_when_stale():
+    import asyncio
+    from types import SimpleNamespace
+
+    from custom_components.davis_weatherlink_live import async_remove_config_entry_device
+
+    data = {"raw_api": {"data": {"conditions": [{"lsid": 123}]}}}
+    entry = SimpleNamespace(entry_id="entry1", runtime_data=SimpleNamespace(coordinator=SimpleNamespace(data=data)))
+
+    def can_remove(entry, device_id):
+        device = SimpleNamespace(identifiers={("davis_weatherlink_live", device_id)})
+        return asyncio.run(async_remove_config_entry_device(None, entry, device))
+
+    assert can_remove(entry, "entry1123") is False  # still reporting
+    assert can_remove(entry, "entry1999") is True  # stale
+    assert can_remove(SimpleNamespace(entry_id="entry1"), "entry1123") is True  # entry not loaded
