@@ -66,3 +66,20 @@ def test_first_refresh_failure_with_cache_raises():
     c.wll_local.get_weather_data = AsyncMock(side_effect=TimeoutError)
     with pytest.raises(UpdateFailed):
         run(c)
+
+
+def test_cache_outage_logged_once_and_recovery_logged(caplog):
+    c = make_coordinator(cache=True, cache_age=60)
+    c.data = {"temp_tx1": 1}
+    c._last_success = coord_mod.time.monotonic()
+    c.wll_local.get_weather_data = AsyncMock(side_effect=TimeoutError)
+    caplog.set_level("INFO", logger=coord_mod.__name__)
+
+    run(c)
+    run(c)
+    assert sum("using cached data" in r.message for r in caplog.records if r.levelname == "WARNING") == 1
+
+    c.wll_local.get_weather_data = AsyncMock(return_value={"temp_tx1": 2})
+    run(c)
+    run(c)
+    assert sum("responding again" in r.message for r in caplog.records) == 1

@@ -2,8 +2,11 @@
  
 import json
 import random
+import socket
+import threading
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import parse_qs, urlparse
 
 
 class JSONHandler(BaseHTTPRequestHandler):
@@ -15,6 +18,68 @@ class JSONHandler(BaseHTTPRequestHandler):
 
     # Set this to true to enable random connection refused errors (50% chance)
     ENABLE_RANDOM_CONNECTION_REFUSED = True
+
+    # Real-time UDP broadcast (GET /v1/real_time?duration=N), like the real WLL
+    REALTIME_PORT = 22222
+    BROADCAST_ADDR = "255.255.255.255"
+    _broadcast_until = 0.0
+    _broadcast_thread = None
+
+    @classmethod
+    def _broadcast(cls):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        while time.time() < cls._broadcast_until:
+            packet = {
+                "did": "002E0B349999",
+                "ts": int(time.time()),
+                "conditions": [
+                    {
+                        "lsid": 309782 + txid,
+                        "data_structure_type": 1,
+                        "txid": txid,
+                        "wind_speed_last": round(random.uniform(0, 25), 2),
+                        "wind_dir_last": random.randint(0, 359),
+                        "rain_size": 1,
+                        "rain_rate_last": 0,
+                        "rain_15_min": 0,
+                        "rain_60_min": 0,
+                        "rain_24_hr": 0,
+                        "rain_storm": None,
+                        "rain_storm_start_at": None,
+                        "rainfall_daily": 0,
+                        "rainfall_monthly": 10,
+                        "rainfall_year": 663,
+                        "wind_speed_hi_last_10_min": round(random.uniform(10, 30), 2),
+                        "wind_dir_at_hi_speed_last_10_min": random.randint(0, 359),
+                    }
+                    for txid in (1, 2)
+                ],
+            }
+            sock.sendto(json.dumps(packet).encode(), (cls.BROADCAST_ADDR, cls.REALTIME_PORT))
+            time.sleep(2.5)
+        sock.close()
+
+    def _start_realtime(self):
+        cls = type(self)
+        query = parse_qs(urlparse(self.path).query)
+        duration = int(query.get("duration", ["1200"])[0])
+        cls._broadcast_until = max(cls._broadcast_until, time.time() + duration)
+        if cls._broadcast_thread is None or not cls._broadcast_thread.is_alive():
+            cls._broadcast_thread = threading.Thread(target=cls._broadcast, daemon=True)
+            cls._broadcast_thread.start()
+        print(f"Broadcasting real-time data on UDP {cls.REALTIME_PORT}...")
+        body = {
+            "data": {
+                "broadcast_port": cls.REALTIME_PORT,
+                "duration": round(cls._broadcast_until - time.time()),
+            },
+            "error": None,
+        }
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(json.dumps(body).encode("utf-8"))
 
     def do_GET(self):
         # Refuse all connections if enabled
@@ -34,6 +99,10 @@ class JSONHandler(BaseHTTPRequestHandler):
             print("Delaying response by 30 seconds...")
             time.sleep(30)
             print("Response sent after 30-second delay")
+
+        if self.path.startswith("/v1/real_time"):
+            self._start_realtime()
+            return
 
         RESPONSE = {
             "data": {

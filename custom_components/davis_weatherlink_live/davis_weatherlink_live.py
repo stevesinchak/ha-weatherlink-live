@@ -35,7 +35,7 @@ class DavisWeatherLinkLive:
                 if isinstance(unix_timestamp, (int, float))
                 else None
             )
-        except (OSError, ValueError):  # Handle invalid timestamps
+        except (OSError, OverflowError, ValueError):  # Handle invalid timestamps
             return None
 
     @staticmethod

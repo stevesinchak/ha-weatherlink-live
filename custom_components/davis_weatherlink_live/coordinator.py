@@ -28,6 +28,7 @@ class WeatherCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.api_cache: bool = cache.get("cache", False)
         self.api_cache_age: int = cache.get("cache_age", API_INITIAL_MAX_CACHE_AGE)
         self._last_success: float | None = None
+        self._serving_cache = False  # so an outage is logged once, not every poll
 
         super().__init__(
             hass,
@@ -61,11 +62,16 @@ class WeatherCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 and self._last_success is not None
                 and time.monotonic() - self._last_success < self.api_cache_age
             ):
-                _LOGGER.warning(
-                    "Davis API not responding (%s), using cached data", err
-                )
+                log = _LOGGER.debug if self._serving_cache else _LOGGER.warning
+                log("Davis API not responding (%s), using cached data", err)
+                self._serving_cache = True
                 return self.data
+            # The coordinator logs this outage and its recovery once by itself
+            self._serving_cache = False
             raise UpdateFailed(f"Error communicating with Davis API: {err}") from err
 
+        if self._serving_cache:
+            _LOGGER.info("Davis API is responding again")
+            self._serving_cache = False
         self._last_success = time.monotonic()
         return data

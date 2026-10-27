@@ -4,9 +4,12 @@
 * [Introduction](#introduction)
 * [Installation](#installation)
 * [Configuration](#configuration)
+* [Optional Advanced Data Caching](#optional-advanced-data-caching)
+* [Optional Real-Time Wind & Rain](#optional-real-time-wind--rain)
+* [Automation Examples](#automation-examples)
+* [Known Limitations](#known-limitations)
 * [Removal](#removal)
 * [Troubleshooting](#troubleshooting)
-* [Known Limitations](#known-limitations)
 
 ## Introduction
 
@@ -90,7 +93,7 @@ This integration also supports the [local api](https://weatherlink.github.io/air
 
 **Note: You may want to disable specific device sensors that are not relevant for your device hardware. Unfortunately, the Davis WeatherLink Live API does not provide a good way for this integration to identify specific sensors that are not present, as the actual sensor device model sending the data to the WeatherLink Live is not available in the local API. I explored automatically disabling sensors that have null or zero values upon setup, but observed that this was not a reliable technique, as some sensors would send actual data later, or a zero value is legitimate in many cases (no wind). If anyone has a better approach, please [start a discussion here](https://github.com/stevesinchak/ha-weatherlink-live/discussions).**
 
-At any point, you can update the configuration you specified while adding the integration by simply going to the [Davis WeatherLink Live 6100](https://my.home-assistant.io/redirect/integration/?domain=davis_weatherlink_live) page and hitting the :gear: `Gear` button. This is helpful if you would like to adjust the Update Interval. 
+At any point, you can update the configuration you specified while adding the integration by simply going to the [Davis WeatherLink Live 6100](https://my.home-assistant.io/redirect/integration/?domain=davis_weatherlink_live) page and hitting the :gear: `Gear` button. This is helpful if you would like to adjust the Update Interval. The same screen also has two optional features, described below: Advanced Data Caching and Real-Time Wind & Rain.
 
 ## Optional Advanced Data Caching
 
@@ -99,6 +102,97 @@ This feature is helpful if your Home Assistant server and WeatherLink Live have 
 When caching is enabled, if the API is unreachable, the integration will reuse the last successful API response to populate sensor values until the cache expires. This prevents sensors from going to an "unavailable" state during short outages or device busy scenarios. You can set the cache expiration time (in seconds) to control how long cached data is used before giving up and marking sensors as unavailable. A reasonable cache expiration value is between 10 and 60 seconds to balance data freshness with reliability.
 
 If you would like to use this feature, go to the [Davis WeatherLink Live](https://my.home-assistant.io/redirect/integration/?domain=davis_weatherlink_live) integration page, hit the :gear: `Gear` button, and expand the `Optional: Advanced Data Caching` section. Check the box to enable caching and set the cache expiration time. Hit `SUBMIT` to save your changes.
+
+## Optional Real-Time Wind & Rain
+
+The WeatherLink Live can broadcast wind and rain data on your local network every 2.5 seconds using its [real-time UDP broadcast](https://weatherlink.github.io/weatherlink-live-local-api/). When this option is enabled, the integration listens for those broadcasts and updates the wind and rain sensors of each ISS (wind speed, direction, gusts, rain rate, and rainfall totals) as soon as new data arrives. All other sensors (temperature, humidity, barometer, soil, AirLink, etc.) keep updating at your configured polling Update Interval.
+
+This feature is off by default and fully separate from normal polling. If the broadcast can't be started or stops arriving, the wind and rain sensors simply fall back to the polled values within about 10 seconds.
+
+**Requirements**
+
+* A Davis WeatherLink Live with at least one ISS transmitter (the AirLink does not support real-time broadcasts).
+* Home Assistant must be on the same local network (subnet/VLAN) as the WeatherLink Live. Broadcasts do not cross routers.
+* Home Assistant must be able to receive UDP traffic on port 22222. If you run Home Assistant in Docker, use host networking. Home Assistant OS works out of the box.
+
+**Enabling**
+
+Go to the [Davis WeatherLink Live](https://my.home-assistant.io/redirect/integration/?domain=davis_weatherlink_live) integration page, hit the :gear: `Gear` button, and expand the `Optional: Real-Time Wind & Rain (WeatherLink Live only)` section. Check the box and hit `SUBMIT`. The integration reloads and requests the broadcast a few seconds later. It renews the request every minute, so the broadcast resumes on its own after a WeatherLink Live restart.
+
+**Checking that it works**
+
+Open a wind sensor's history: with real-time working, it updates every few seconds whenever the wind changes, instead of only at your Update Interval. If Home Assistant receives no broadcast packets in the first minute, a warning is written to the [Home Assistant logs](https://my.home-assistant.io/redirect/logs/?) with tips to check your network. For more detail, enable debug logging on the integration page (see [Troubleshooting](#troubleshooting)).
+
+**Note:** *Real-time updates write wind and rain values to the Home Assistant database far more often than polling does (values are only written when they change, but wind changes often). If database size is a concern, consider excluding the fast-changing wind sensors from the [recorder](https://www.home-assistant.io/integrations/recorder/).*
+
+## Automation Examples
+
+Paste these into **Settings → Automations & scenes → Create automation → Edit in YAML**. The entity IDs are the defaults for ISS transmitter 1 and an AirLink; check yours under **Settings → Devices & services → Davis WeatherLink Live / AirLink** and adjust if they differ. Replace `cover.awning` and `fan.air_purifier` with your own devices.
+
+**Notify when it starts raining**
+```yaml
+alias: "Rain started"
+triggers:
+  - trigger: numeric_state
+    entity_id: sensor.davis_iss_tx_1_rain_rate_latest
+    above: 0
+actions:
+  - action: notify.notify
+    data:
+      message: "It's raining ({{ states('sensor.davis_iss_tx_1_rain_rate_latest') }} in/h)"
+```
+
+**Close the awning in high wind** (with real-time mode on, this reacts within a few seconds)
+```yaml
+alias: "High wind: close awning"
+triggers:
+  - trigger: numeric_state
+    entity_id: sensor.davis_iss_tx_1_wind_gust_last_10_min
+    above: 30
+actions:
+  - action: cover.close_cover
+    target:
+      entity_id: cover.awning
+  - action: notify.notify
+    data:
+      message: "Wind gust {{ states('sensor.davis_iss_tx_1_wind_gust_last_10_min') }} mph, closing the awning"
+```
+
+**Warn when the ISS battery is low**
+```yaml
+alias: "ISS battery low"
+triggers:
+  - trigger: state
+    entity_id: sensor.davis_iss_tx_1_iss_battery_low
+    to: "Yes"
+actions:
+  - action: notify.notify
+    data:
+      message: "The Davis ISS transmitter battery is low"
+```
+
+**Run the air purifier when air quality is poor**
+```yaml
+alias: "Poor air quality: purifier on"
+triggers:
+  - trigger: numeric_state
+    entity_id: sensor.davis_airlink_aqm_current_pm2_5
+    above: 35
+    for:
+      minutes: 10
+actions:
+  - action: fan.turn_on
+    target:
+      entity_id: fan.air_purifier
+```
+
+## Known Limitations
+
+* **One request at a time:** The WeatherLink Live only answers one request at a time. If another app (or a second Home Assistant instance) also polls the same device, some updates may fail or the setup may show "Can't reach the device". Try again, or reduce how often the other app polls.
+* **New devices need a reload:** If you add a transmitter or AirLink to your hub after setting up the integration, reload the integration to see its sensors.
+* **Real-time updates are wind and rain only:** The optional real-time mode covers only the ISS wind and rain sensors (not AirLink or other sensors). Home Assistant must be on the same local network as the WeatherLink Live to receive the UDP broadcast on port 22222 (Docker needs host networking).
+* **Minimum update interval:** The polling interval can't be lower than 10 seconds, and values are only as fresh as the WeatherLink Live's own readings.
+* **Home Assistant version:** Requires Home Assistant 2026.7.0 or newer.
 
 ## Removal
 
@@ -116,7 +210,7 @@ In the event you are experiencing a problem with this integration, please make s
 
 On the [Davis WeatherLink Live 6100](https://my.home-assistant.io/redirect/integration/?domain=davis_weatherlink_live) integration page, you can also enable debug logging so all logs show up in your [Home Assistant Core logging page](https://my.home-assistant.io/redirect/logs/?). 
 
-If you continue to have an issue, please open an issue [here](https://github.com/stevesinchak/ha-weatherlink-live/issues) and provide copies of logs with debug enabled. 
+If you continue to have an issue, please open an issue [here](https://github.com/stevesinchak/ha-weatherlink-live/issues) and provide copies of logs with debug enabled. You can also download diagnostics from the integration's ⋮ menu and attach the file to your issue (your IP address is removed).
 
 ## Project Support
 
@@ -125,61 +219,61 @@ If you are a happy user and would like to support the project, please contribute
 ### Home Assistant Integration Quality Scale Report
 
 #### Bronze
-- [x] `action-setup` - Service actions are registered in async_setup
+- (N/A no service actions) `action-setup` - Service actions are registered in async_setup
 - [x] `appropriate-polling` - If it's a polling integration, set an appropriate polling interval
-- [ ] `brands` - Has branding assets available for the integration
+- [x] `brands` - Has branding assets available for the integration
 - [x] `common-modules` - Place common patterns in common modules
-- [ ] `config-flow-test-coverage` - Full test coverage for the config flow
+- [x] `config-flow-test-coverage` - Full test coverage for the config flow
 - [x] `config-flow` - Integration needs to be able to be set up via the UI
     - [x] Uses `data_description` to give context to fields
     - [x] Uses `ConfigEntry.data` and `ConfigEntry.options` correctly
 - [x] `dependency-transparency` - Dependency transparency
-- [x] `docs-actions` - The documentation describes the provided service actions that can be used
+- (N/A no service actions) `docs-actions` - The documentation describes the provided service actions that can be used
 - [x] `docs-high-level-description` - The documentation includes a high-level description of the integration brand, product, or service
 - [x] `docs-installation-instructions` - The documentation provides step-by-step installation instructions for the integration, including, if needed, prerequisites
 - [x] `docs-removal-instructions` - The documentation provides removal instructions
 - [x] `entity-event-setup` - Entities event setup
 - [x] `entity-unique-id` - Entities have a unique ID
 - [x] `has-entity-name` - Entities use has_entity_name = True
-- [ ] `runtime-data` - Use ConfigEntry.runtime_data to store runtime data
-- [ ] `test-before-configure` - Test a connection in the config flow
-- [ ] `test-before-setup` - Check during integration initialization if we are able to set it up correctly
+- [x] `runtime-data` - Use ConfigEntry.runtime_data to store runtime data
+- [x] `test-before-configure` - Test a connection in the config flow
+- [x] `test-before-setup` - Check during integration initialization if we are able to set it up correctly
 - [x] `unique-config-entry` - Don't allow the same device or service to be able to be set up twice
 
 #### Silver
-- [ ] `action-exceptions` - Service actions raise exceptions when encountering failures
+- (N/A no service actions) `action-exceptions` - Service actions raise exceptions when encountering failures
 - [x] `config-entry-unloading` - Support config entry unloading
 - [x] `docs-configuration-parameters` - The documentation describes all integration configuration options
 - [x] `docs-installation-parameters` - The documentation describes all integration installation parameters
-- [ ] `entity-unavailable` - Mark entity unavailable if appropriate
+- [x] `entity-unavailable` - Mark entity unavailable if appropriate
 - [x] `integration-owner` - Has an integration owner
-- [ ] `log-when-unavailable` - If internet/device/service is unavailable, log once when unavailable and once when back connected
-- [ ] `parallel-updates` - Set Parallel updates
+- [x] `log-when-unavailable` - If internet/device/service is unavailable, log once when unavailable and once when back connected
+- [x] `parallel-updates` - Set Parallel updates
 - (N/A no auth) `reauthentication-flow` - Reauthentication flow
-- [ ] `test-coverage` - Above 95% test coverage for all integration modules
+- [x] `test-coverage` - Above 95% test coverage for all integration modules
 
 #### Gold
 - [x] `devices` - The integration creates devices
-- [ ] `diagnostics` - Implements diagnostics
+- [x] `diagnostics` - Implements diagnostics
 - [x] `discovery-update-info` - Integration uses discovery info to update network information
 - [x] `discovery` - Can be discovered
 - [x] `docs-data-update` - The documentation describes how data is updated
-- [ ] `docs-examples` - The documentation provides automation examples the user can use.
+- [x] `docs-examples` - The documentation provides automation examples the user can use.
 - [x] `docs-known-limitations` - The documentation describes known limitations of the integration (not to be confused with bugs)
 - [x] `docs-supported-devices` - The documentation describes known supported / unsupported devices
 - [x] `docs-supported-functions` - The documentation describes the supported functionality, including entities, and platforms
 - [x] `docs-troubleshooting` - The documentation provides troubleshooting information
 - [x] `docs-use-cases` - The documentation describes use cases to illustrate how this integration can be used
-- N/A `dynamic-devices` - Devices added after integration setup
+- [ ] `dynamic-devices` - Devices added after integration setup
 - [x] `entity-category` - Entities are assigned an appropriate EntityCategory
 - [x] `entity-device-class` - Entities use device classes where possible
 - [x] `entity-disabled-by-default` - Integration disables less popular (or noisy) entities
 - [x] `entity-translations` - Entities have translated names
 - [ ] `exception-translations` - Exception messages are translatable
 - [ ] `icon-translations` - Icon translations
-- [x] `reconfiguration-flow` - Integrations should have a reconfigure flow
-- [ ] `repair-issues` - Repair issues and repair flows are used when user intervention is needed
-- N/A `stale-devices` - Clean up stale devices
+- [ ] `reconfiguration-flow` - Integrations should have a reconfigure flow
+- (N/A nothing to repair) `repair-issues` - Repair issues and repair flows are used when user intervention is needed
+- [x] `stale-devices` - Clean up stale devices
 
 #### Platinum
 - [x] `async-dependency` - Dependency is async

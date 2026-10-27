@@ -30,8 +30,12 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import MyConfigEntry
 from .const import DOMAIN
 from .coordinator import WeatherCoordinator
+from .realtime import is_realtime_key
 
 _LOGGER = logging.getLogger(__name__)
+
+# Entities only read coordinator data; the coordinator does the polling
+PARALLEL_UPDATES = 0
 
 
 def get_device_name(condition: dict) -> str | None:
@@ -820,5 +824,19 @@ class WeatherSensor(CoordinatorEntity[WeatherCoordinator], SensorEntity):
         )
 
     @property
+    def _realtime(self):
+        return self.coordinator.config_entry.runtime_data.realtime
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        if self._realtime and is_realtime_key(self.entity_description.key):
+            self.async_on_remove(self._realtime.add_listener(self.async_write_ha_state))
+
+    @property
     def native_value(self):
-        return self.coordinator.data.get(self.entity_description.key)
+        key = self.entity_description.key
+        if self._realtime:
+            fresh, value = self._realtime.value(key)
+            if fresh:
+                return value
+        return self.coordinator.data.get(key)

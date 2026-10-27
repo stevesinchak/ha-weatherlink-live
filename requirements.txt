@@ -1,4 +1,6 @@
-pytest
-pytest-asyncio
-homeassistant
+# Test dependencies. The HA test harness pins pytest, pytest-asyncio and Home Assistant.
+# ">=" tests against the newest Home Assistant; 0.13.348 (= HA 2026.7.4) is the floor.
+# If the code starts using a newer HA feature, raise MIN_HA_VERSION in __init__.py,
+# "homeassistant" in hacs.json, and the README to match.
+pytest-homeassistant-custom-component>=0.13.348
 aiohttp

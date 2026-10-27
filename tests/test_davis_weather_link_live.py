@@ -19,6 +19,9 @@ class TestDavisWeatherLinkLive:
     def test_unix_to_datetime_non_numeric_input(self):
         assert self.davis.unix_to_datetime("123") is None
 
+    def test_unix_to_datetime_out_of_range(self):
+        assert self.davis.unix_to_datetime(1e20) is None
+
     def test_battery_low_status(self):
         assert self.davis.battery_low_status(0) == "No"
         assert self.davis.battery_low_status(1) == "Yes"
@@ -157,3 +160,9 @@ def test_validate_host():
     assert errors("192.168.1.5") == {}
     assert errors("http://192.168.1.5") == {"api_host": "api_host_http_not_allowed"}
     assert errors("HTTPS://wll.local") == {"api_host": "api_host_http_not_allowed"}
+
+
+def test_unknown_device_type_has_no_sensors():
+    from custom_components.davis_weatherlink_live.sensor import get_device_sensors
+
+    assert get_device_sensors({"data_structure_type": 99, "lsid": 1}, "E1", "DID") == ()

@@ -268,16 +268,30 @@
                             "cache": "Prevents “Unavailable” sensor values until cache expires",
                             "cache_age": "Amount of time in Seconds before cached data is discarded and sensors display “Unavailable”"
                         }
+                    },
+                    "realtime_section": {
+                        "name": "Optional: Real-Time Wind & Rain (WeatherLink Live only)",
+                        "description": "Updates wind and rain sensors every 2.5 seconds using the WeatherLink Live UDP broadcast (port 22222). Home Assistant must be on the same local network as the WLL device. All other sensors keep using the configured polling update interval.",
+                        "data": {
+                            "realtime": "Enable real-time wind & rain updates"
+                        },
+                        "data_description": {
+                            "realtime": "Off by default. If the WLL device can't broadcast, a warning is logged and normal polling continues. Real-time updates write more often to the Home Assistant database."
+                        }
                     }
                 }
             }
         },
         "error": {
             "api_host_http_not_allowed": "Enter only the hostname or IP address, no 'http' or 'https'",
-            "update_interval_too_low": "The Davis API endpoint is updated every 10 seconds, shorter intervals will duplicate data and waste storage!"
+            "update_interval_too_low": "The Davis API endpoint is updated every 10 seconds, shorter intervals will duplicate data and waste storage!",
+            "cannot_connect": "Can't reach the device. Check the host, and that it's on and on the same network. The WeatherLink Live handles one request at a time, so if another app is polling it, try again.",
+            "invalid_response": "Connected, but the device didn't return WeatherLink data. Check the API Path.",
+            "unknown": "Unexpected error, see the logs."
         },
         "abort": {
-            "already_configured": "This device is already configured"
+            "already_configured": "This device is already configured",
+            "cannot_connect": "Can't reach the discovered device"
         }
     },
     "options": {
@@ -305,13 +319,26 @@
                             "cache": "Prevents “Unavailable” sensor values until cache expires",
                             "cache_age": "Amount of time in Seconds before cached data is discarded and sensors display “Unavailable”"
                         }
+                    },
+                    "realtime_section": {
+                        "name": "Optional: Real-Time Wind & Rain (WeatherLink Live only)",
+                        "description": "Updates wind and rain sensors every 2.5 seconds using the WeatherLink Live UDP broadcast (port 22222). Home Assistant must be on the same local network as the WLL device. All other sensors keep using the configured polling update interval.",
+                        "data": {
+                            "realtime": "Enable real-time wind & rain updates"
+                        },
+                        "data_description": {
+                            "realtime": "Off by default. If the WLL device can't broadcast, a warning is logged and normal polling continues. Real-time updates write more often to the Home Assistant database."
+                        }
                     }
                 }
             }
         },
         "error": {
             "api_host_http_not_allowed": "Enter only the hostname or IP address, no 'http' or 'https'",
-            "update_interval_too_low": "The Davis API endpoint is updated every 10 seconds, shorter intervals will duplicate data and waste storage!"
+            "update_interval_too_low": "The Davis API endpoint is updated every 10 seconds, shorter intervals will duplicate data and waste storage!",
+            "cannot_connect": "Can't reach the device. Check the host, and that it's on and on the same network. The WeatherLink Live handles one request at a time, so if another app is polling it, try again.",
+            "invalid_response": "Connected, but the device didn't return WeatherLink data. Check the API Path.",
+            "unknown": "Unexpected error, see the logs."
         }
     }
 }

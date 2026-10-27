@@ -18,6 +18,9 @@ from custom_components.davis_weatherlink_live.sensor import (
     get_device_sensors,
 )
 
+# These tests talk to the simulators over localhost on purpose
+pytestmark = pytest.mark.usefixtures("socket_enabled")
+
 SIMULATORS = ("fake_api", "fake_api_aqm1", "fake_api_aqm2")
 
 
@@ -32,12 +35,18 @@ def fake_server(module_name, **flags):
     handler = type("TestHandler", (base,), attrs)
 
     server = HTTPServer(("127.0.0.1", 0), handler)
-    threading.Thread(target=server.serve_forever, daemon=True).start()
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
     try:
         yield f"http://127.0.0.1:{server.server_port}/v1/current_conditions"
     finally:
         server.shutdown()
         server.server_close()
+        thread.join()
+        # Stop the real-time broadcast thread (fake_api only); HA's test harness fails on leftover threads
+        if getattr(handler, "_broadcast_thread", None):
+            handler._broadcast_until = 0
+            handler._broadcast_thread.join(timeout=5)  # it checks between 2.5s sends
 
 
 def fetch(url, entry_id):

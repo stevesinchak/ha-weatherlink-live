@@ -13,10 +13,12 @@ from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import DOMAIN
 from .coordinator import WeatherCoordinator
+from .realtime import RealtimeListener
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,6 +54,7 @@ class RuntimeData:
     """Runtime data stored on the config entry."""
 
     coordinator: WeatherCoordinator
+    realtime: RealtimeListener | None = None
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: MyConfigEntry) -> bool:
@@ -69,16 +72,31 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: MyConfigEntry) ->
     did = coordinator.data["raw_api"]["data"].get("did")
     if not did:  # needed for unique ids; never build "..._None" ids
         raise ConfigEntryNotReady("Davis API response is missing the device id (did)")
+    if config_entry.unique_id != did:  # older entries: none, or the zeroconf hostname
+        hass.config_entries.async_update_entry(config_entry, unique_id=did)
 
     # Old ISS/soil ids ("temp_tx1") weren't unique across hubs; add the hub id
     migrate_entities(er.async_get(hass), config_entry.entry_id, did)
 
-    config_entry.runtime_data = RuntimeData(coordinator)
+    realtime = None
+    if config_entry.options.get("realtime_section", {}).get("realtime", False):
+        realtime = RealtimeListener(
+            hass,
+            async_get_clientsession(hass),
+            f"http://{config_entry.options['api_host']}",
+            did,
+        )
+        config_entry.async_on_unload(realtime.async_stop)
+
+    # Set before platforms load so sensors can subscribe to real-time updates
+    config_entry.runtime_data = RuntimeData(coordinator, realtime)
     config_entry.async_on_unload(
         config_entry.add_update_listener(_async_update_listener)
     )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    if realtime:
+        await realtime.async_start()  # never raises; on failure polling just continues
     return True
 
 
