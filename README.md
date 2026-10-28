@@ -253,11 +253,11 @@ pytest --cov=custom_components.davis_weatherlink_live --cov-report=term-missing
 
 If you are a happy user and would like to support the project, please contribute to the project by opening an issue, enhancement request, start a discussion, or submit a pull request to make it better. Thank you -Steve
 
-### Home Assistant Integration Quality Scale Report
+## Home Assistant Integration Quality Scale Report
 
 This integration meets the **Platinum** tier: every rule below is done or exempt (exempt rules give the reason). The same status is tracked in [quality_scale.yaml](custom_components/davis_weatherlink_live/quality_scale.yaml).
 
-#### Bronze
+### Bronze
 - (N/A no service actions) `action-setup` - Service actions are registered in async_setup
 - [x] `appropriate-polling` - If it's a polling integration, set an appropriate polling interval
 - [x] `brands` - Has branding assets available for the integration
@@ -279,7 +279,7 @@ This integration meets the **Platinum** tier: every rule below is done or exempt
 - [x] `test-before-setup` - Check during integration initialization if we are able to set it up correctly
 - [x] `unique-config-entry` - Don't allow the same device or service to be able to be set up twice
 
-#### Silver
+### Silver
 - (N/A no service actions) `action-exceptions` - Service actions raise exceptions when encountering failures
 - [x] `config-entry-unloading` - Support config entry unloading
 - [x] `docs-configuration-parameters` - The documentation describes all integration configuration options
@@ -291,7 +291,7 @@ This integration meets the **Platinum** tier: every rule below is done or exempt
 - (N/A no auth) `reauthentication-flow` - Reauthentication flow
 - [x] `test-coverage` - Above 95% test coverage for all integration modules
 
-#### Gold
+### Gold
 - [x] `devices` - The integration creates devices
 - [x] `diagnostics` - Implements diagnostics
 - [x] `discovery-update-info` - Integration uses discovery info to update network information
@@ -314,7 +314,7 @@ This integration meets the **Platinum** tier: every rule below is done or exempt
 - (N/A nothing to repair) `repair-issues` - Repair issues and repair flows are used when user intervention is needed
 - [x] `stale-devices` - Clean up stale devices
 
-#### Platinum
+### Platinum
 - [x] `async-dependency` - Dependency is async
 - [x] `inject-websession` - The integration dependency supports passing in a websession
 - [x] `strict-typing` - Strict typing
