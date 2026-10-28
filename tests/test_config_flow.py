@@ -67,7 +67,7 @@ async def test_user_flow_success(hass, mock_fetch):
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], USER_INPUT)
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Davis Device"
+    assert result["title"] == f"Davis WeatherLink Live {DID}"
     assert result["data"] == {}
     assert result["options"] == USER_INPUT
     mock_fetch.assert_awaited_once()
@@ -232,3 +232,51 @@ async def test_options_unchanged_host_not_tested(hass, mock_fetch):
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     mock_fetch.assert_not_awaited()
+
+
+@pytest.fixture
+def entry(hass):
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=DID, options=USER_INPUT)
+    entry.add_to_hass(hass)
+    return entry
+
+
+async def test_reconfigure_updates_host(hass, mock_fetch, entry):
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"api_host": "10.0.0.77", "api_path": "/v1/current_conditions"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.options == {**USER_INPUT, "api_host": "10.0.0.77"}
+
+
+async def test_reconfigure_other_hub_aborts(hass, mock_fetch, entry):
+    mock_fetch.return_value = {"raw_api": {"data": {"did": "001D0AFFFFFF"}}}
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"api_host": "10.0.0.77", "api_path": "/v1/current_conditions"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_device"
+    assert entry.options == USER_INPUT
+
+
+async def test_reconfigure_cannot_connect(hass, mock_fetch, entry):
+    mock_fetch.side_effect = aiohttp.ClientError
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"api_host": "10.0.0.77", "api_path": "/v1/current_conditions"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_reconfigure_url_host_rejected(hass, mock_fetch, entry):
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"api_host": "http://10.0.0.77", "api_path": "/v1/current_conditions"}
+    )
+    assert result["errors"] == {"api_host": "api_host_http_not_allowed"}
+    mock_fetch.assert_not_called()

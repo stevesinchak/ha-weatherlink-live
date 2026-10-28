@@ -40,8 +40,9 @@ def test_failure_without_cache_raises():
     c.data = {"temp_tx1": 1}
     c._last_success = coord_mod.time.monotonic()
     c.wll_local.get_weather_data = AsyncMock(side_effect=TimeoutError)
-    with pytest.raises(UpdateFailed):
+    with pytest.raises(UpdateFailed) as exc:
         run(c)
+    assert exc.value.translation_key == "update_failed"
 
 
 def test_failure_with_fresh_cache_returns_cached():

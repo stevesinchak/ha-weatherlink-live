@@ -34,9 +34,9 @@ def wll_payload(socket_enabled):
             return json.load(response)
 
 
-async def setup(hass, options=OPTIONS, unique_id=None):
+async def setup(hass, options=OPTIONS, unique_id=None, title="Davis Device"):
     hass.config.units = US_CUSTOMARY_SYSTEM  # the device reports °F and mph; compare unconverted
-    entry = MockConfigEntry(domain=DOMAIN, options=options, unique_id=unique_id)
+    entry = MockConfigEntry(domain=DOMAIN, options=options, unique_id=unique_id, title=title)
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -83,12 +83,14 @@ async def test_missing_did_retries(hass, aioclient_mock, wll_payload):
     aioclient_mock.get(URL, json=wll_payload)
     entry = await setup(hass)
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert "missing the device id" in entry.reason
 
 
 async def test_old_home_assistant_refused(hass, aioclient_mock):
     with patch("custom_components.davis_weatherlink_live.HA_VERSION", "2026.6.0"):
         entry = await setup(hass)
     assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert "requires Home Assistant 2026.7.0" in entry.reason
     assert aioclient_mock.call_count == 0
 
 
@@ -125,3 +127,32 @@ async def test_old_hostname_unique_id_becomes_did(hass, aioclient_mock, wll_payl
     aioclient_mock.get(URL, json=wll_payload)
     entry = await setup(hass, unique_id="weatherlinklive-349999.local.")
     assert entry.unique_id == DID  # so discovery can follow IP changes
+
+
+async def test_transmitter_added_later_gets_sensors(hass, aioclient_mock, wll_payload):
+    aioclient_mock.get(URL, json=wll_payload)
+    entry = await setup(hass)
+    assert er.async_get(hass).async_get_entity_id("sensor", DOMAIN, f"temp_tx7_{DID}") is None
+
+    iss = next(c for c in wll_payload["data"]["conditions"] if c["data_structure_type"] == 1)
+    wll_payload["data"]["conditions"].append({**iss, "lsid": 999999, "txid": 7})
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(URL, json=wll_payload)
+    await entry.runtime_data.coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert state_of(hass, f"temp_tx7_{DID}") is not None
+    devices = dr.async_entries_for_config_entry(dr.async_get(hass), entry.entry_id)
+    assert len(devices) == len(wll_payload["data"]["conditions"])
+
+
+async def test_old_default_title_gets_hub_name(hass, aioclient_mock, wll_payload):
+    aioclient_mock.get(URL, json=wll_payload)
+    entry = await setup(hass)
+    assert entry.title == f"Davis WeatherLink Live {DID}"
+
+
+async def test_user_title_is_kept(hass, aioclient_mock, wll_payload):
+    aioclient_mock.get(URL, json=wll_payload)
+    entry = await setup(hass, title="Backyard Station")
+    assert entry.title == "Backyard Station"

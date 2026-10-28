@@ -10,6 +10,7 @@
 * [Known Limitations](#known-limitations)
 * [Removal](#removal)
 * [Troubleshooting](#troubleshooting)
+* [Testing](#testing)
 
 ## Introduction
 
@@ -94,6 +95,8 @@ This integration also supports the [local api](https://weatherlink.github.io/air
 **Note: You may want to disable specific device sensors that are not relevant for your device hardware. Unfortunately, the Davis WeatherLink Live API does not provide a good way for this integration to identify specific sensors that are not present, as the actual sensor device model sending the data to the WeatherLink Live is not available in the local API. I explored automatically disabling sensors that have null or zero values upon setup, but observed that this was not a reliable technique, as some sensors would send actual data later, or a zero value is legitimate in many cases (no wind). If anyone has a better approach, please [start a discussion here](https://github.com/stevesinchak/ha-weatherlink-live/discussions).**
 
 At any point, you can update the configuration you specified while adding the integration by simply going to the [Davis WeatherLink Live 6100](https://my.home-assistant.io/redirect/integration/?domain=davis_weatherlink_live) page and hitting the :gear: `Gear` button. This is helpful if you would like to adjust the Update Interval. The same screen also has two optional features, described below: Advanced Data Caching and Real-Time Wind & Rain.
+
+If the device moves to a new IP address or hostname, you can also use the entry's ⋮ menu > `Reconfigure`. It only asks for the host and path, and checks that the new address is the same Davis device, so your sensors and history stay attached.
 
 ## Optional Advanced Data Caching
 
@@ -189,7 +192,6 @@ actions:
 ## Known Limitations
 
 * **One request at a time:** The WeatherLink Live only answers one request at a time. If another app (or a second Home Assistant instance) also polls the same device, some updates may fail or the setup may show "Can't reach the device". Try again, or reduce how often the other app polls.
-* **New devices need a reload:** If you add a transmitter or AirLink to your hub after setting up the integration, reload the integration to see its sensors.
 * **Real-time updates are wind and rain only:** The optional real-time mode covers only the ISS wind and rain sensors (not AirLink or other sensors). Home Assistant must be on the same local network as the WeatherLink Live to receive the UDP broadcast on port 22222 (Docker needs host networking).
 * **Minimum update interval:** The polling interval can't be lower than 10 seconds, and values are only as fresh as the WeatherLink Live's own readings.
 * **Home Assistant version:** Requires Home Assistant 2026.7.0 or newer.
@@ -212,11 +214,48 @@ On the [Davis WeatherLink Live 6100](https://my.home-assistant.io/redirect/integ
 
 If you continue to have an issue, please open an issue [here](https://github.com/stevesinchak/ha-weatherlink-live/issues) and provide copies of logs with debug enabled. You can also download diagnostics from the integration's ⋮ menu and attach the file to your issue (your IP address is removed).
 
+## Testing
+
+The integration has **75 automated tests** with **100% code coverage** (every line of every module runs during the tests). They run against the oldest supported Home Assistant (2026.7) and the newest release.
+
+| Module | Coverage |
+|---|---|
+| `__init__.py` (setup, unload, migrations) | 100% |
+| `config_flow.py` (setup, discovery, reconfigure, options) | 100% |
+| `const.py` | 100% |
+| `coordinator.py` (polling and cache) | 100% |
+| `davis_weatherlink_live.py` (API client and unit conversion) | 100% |
+| `diagnostics.py` | 100% |
+| `realtime.py` (UDP wind and rain) | 100% |
+| `sensor.py` | 100% |
+
+What the tests cover:
+
+| Test file | Tests | What it checks |
+|---|---|---|
+| `test_config_flow.py` | 20 | Adding the integration, field validation, connection errors, duplicate devices, zeroconf discovery (including a device moving to a new IP), Reconfigure, and the options screen |
+| `test_davis_weather_link_live.py` | 16 | The API client and helpers: timestamps (including bad ones), battery status, wind direction, rain unit conversion, rejecting bad device data, unique ID migration from older versions, and removing stale devices |
+| `test_realtime.py` | 13 | Real-time UDP: parsing broadcasts, renewing the broadcast request, and falling back to polling when it fails |
+| `test_init.py` | 11 | Setting up the whole integration with simulated device data: sensors and devices created, hub naming, setup retries, old Home Assistant versions, new transmitters added later |
+| `test_coordinator.py` | 6 | Polling, the optional cache during outages, and logging when the device goes offline and comes back |
+| `test_fake_apis.py` | 6 | The bundled device simulators (`fake_api*.py`) return data for every sensor, sensor IDs never collide, and a refused connection raises an error |
+| `test_diagnostics.py` | 2 | Diagnostics download, with the IP address removed |
+| `test_typing.py` | 1 | The code passes `mypy --strict` type checking |
+
+To run them yourself (Python 3.14):
+
+```bash
+pip install -r requirements.txt
+pytest --cov=custom_components.davis_weatherlink_live --cov-report=term-missing
+```
+
 ## Project Support
 
 If you are a happy user and would like to support the project, please contribute to the project by opening an issue, enhancement request, start a discussion, or submit a pull request to make it better. Thank you -Steve
 
 ### Home Assistant Integration Quality Scale Report
+
+This integration meets the **Platinum** tier: every rule below is done or exempt (exempt rules give the reason). The same status is tracked in [quality_scale.yaml](custom_components/davis_weatherlink_live/quality_scale.yaml).
 
 #### Bronze
 - (N/A no service actions) `action-setup` - Service actions are registered in async_setup
@@ -264,18 +303,18 @@ If you are a happy user and would like to support the project, please contribute
 - [x] `docs-supported-functions` - The documentation describes the supported functionality, including entities, and platforms
 - [x] `docs-troubleshooting` - The documentation provides troubleshooting information
 - [x] `docs-use-cases` - The documentation describes use cases to illustrate how this integration can be used
-- [ ] `dynamic-devices` - Devices added after integration setup
+- [x] `dynamic-devices` - Devices added after integration setup
 - [x] `entity-category` - Entities are assigned an appropriate EntityCategory
 - [x] `entity-device-class` - Entities use device classes where possible
 - [x] `entity-disabled-by-default` - Integration disables less popular (or noisy) entities
 - [x] `entity-translations` - Entities have translated names
-- [ ] `exception-translations` - Exception messages are translatable
-- [ ] `icon-translations` - Icon translations
-- [ ] `reconfiguration-flow` - Integrations should have a reconfigure flow
+- [x] `exception-translations` - Exception messages are translatable
+- [x] `icon-translations` - Icon translations
+- [x] `reconfiguration-flow` - Integrations should have a reconfigure flow
 - (N/A nothing to repair) `repair-issues` - Repair issues and repair flows are used when user intervention is needed
 - [x] `stale-devices` - Clean up stale devices
 
 #### Platinum
 - [x] `async-dependency` - Dependency is async
 - [x] `inject-websession` - The integration dependency supports passing in a websession
-- [ ] `strict-typing` - Strict typing
+- [x] `strict-typing` - Strict typing

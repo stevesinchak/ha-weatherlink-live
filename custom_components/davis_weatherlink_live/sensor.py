@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -21,16 +23,17 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfVolumetricFlux,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import MyConfigEntry
 from .const import DOMAIN
 from .coordinator import WeatherCoordinator
-from .realtime import is_realtime_key
+from .realtime import RealtimeListener, is_realtime_key
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 
-def get_device_name(condition: dict) -> str | None:
+def get_device_name(condition: dict[str, Any]) -> str | None:
     match condition.get("data_structure_type"):
         case 1:
             return "Davis ISS TX " + str(condition.get("txid"))
@@ -50,11 +53,13 @@ def get_device_name(condition: dict) -> str | None:
             return "Davis LSS"  # + str(condition.get("lsid"))
         case 6:
             return "Davis AirLink AQM"  # + str(condition.get("lsid"))
+        case _:
+            return None
 
 
 # Device Sensor type helper that returns the correct sensors based on the device type
 def get_device_sensors(
-    condition: dict, deviceID: str, did: str | None
+    condition: dict[str, Any], deviceID: str, did: str | None
 ) -> tuple[SensorEntityDescription, ...]:
     device_type = condition.get("data_structure_type")
 
@@ -68,7 +73,7 @@ def get_device_sensors(
     if device_type == 1:  # General weather outdoor sensors
         unique_id = condition.get("txid")
         unique_key = f"_tx{unique_id}_{did}"
-        api_rain_size_value = condition.get("rain_size")
+        api_rain_size_value: Any = condition.get("rain_size")
 
         rain_rate_unit = {
             1: UnitOfVolumetricFlux.INCHES_PER_HOUR,
@@ -180,7 +185,6 @@ def get_device_sensors(
             SensorEntityDescription(
                 key="wind_dir_last_rose" + unique_key,
                 translation_key="wind_dir_last_rose",
-                icon="mdi:compass-outline",
             ),
             SensorEntityDescription(
                 key="wind_speed_avg_last_1_min" + unique_key,
@@ -241,7 +245,6 @@ def get_device_sensors(
             SensorEntityDescription(
                 key="wind_dir_scalar_avg_last_10_min_rose" + unique_key,
                 translation_key="wind_dir_scalar_avg_last_10_min_rose",
-                icon="mdi:compass-outline",
             ),
             SensorEntityDescription(
                 key="wind_speed_hi_last_10_min" + unique_key,
@@ -784,21 +787,33 @@ async def async_setup_entry(
     config_entry: MyConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Create sensors for every device found in the API response."""
+    """Create sensors for every device in the API response, including ones added later."""
     coordinator = config_entry.runtime_data.coordinator
     entry_id = str(config_entry.entry_id)
-    api_data = coordinator.data["raw_api"]["data"]
-    did = api_data.get("did")
+    known_lsids: set[Any] = set()
 
-    sensors = []
-    for condition in api_data.get("conditions", []):
-        device_id = entry_id + str(condition.get("lsid"))
-        device_name = get_device_name(condition)
-        sensors.extend(
-            WeatherSensor(coordinator, description, device_id, device_name)
-            for description in get_device_sensors(condition, entry_id, did)
-        )
-    async_add_entities(sensors)
+    @callback
+    def _add_new_devices() -> None:
+        api_data = coordinator.data["raw_api"]["data"]
+        did = api_data.get("did")
+        sensors: list[WeatherSensor] = []
+        for condition in api_data.get("conditions", []):
+            lsid = condition.get("lsid")
+            if lsid in known_lsids:
+                continue
+            known_lsids.add(lsid)
+            device_id = entry_id + str(lsid)
+            device_name = get_device_name(condition)
+            sensors.extend(
+                WeatherSensor(coordinator, description, device_id, device_name)
+                for description in get_device_sensors(condition, entry_id, did)
+            )
+        if sensors:
+            async_add_entities(sensors)
+
+    _add_new_devices()
+    # A transmitter added to the hub later shows up in a later poll
+    config_entry.async_on_unload(coordinator.async_add_listener(_add_new_devices))
 
 
 class WeatherSensor(CoordinatorEntity[WeatherCoordinator], SensorEntity):
@@ -824,8 +839,9 @@ class WeatherSensor(CoordinatorEntity[WeatherCoordinator], SensorEntity):
         )
 
     @property
-    def _realtime(self):
-        return self.coordinator.config_entry.runtime_data.realtime
+    def _realtime(self) -> RealtimeListener | None:
+        entry = self.coordinator.config_entry
+        return entry.runtime_data.realtime if entry else None
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
@@ -833,10 +849,12 @@ class WeatherSensor(CoordinatorEntity[WeatherCoordinator], SensorEntity):
             self.async_on_remove(self._realtime.add_listener(self.async_write_ha_state))
 
     @property
-    def native_value(self):
+    def native_value(self) -> StateType | datetime:
         key = self.entity_description.key
+        value: StateType | datetime
         if self._realtime:
             fresh, value = self._realtime.value(key)
             if fresh:
                 return value
-        return self.coordinator.data.get(key)
+        value = self.coordinator.data.get(key)
+        return value

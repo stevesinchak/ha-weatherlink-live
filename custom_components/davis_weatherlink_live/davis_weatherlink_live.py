@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
+from typing import Any
+
+import aiohttp
 
 from .const import API_TIMEOUT
 
@@ -20,15 +23,30 @@ class DavisApiError(Exception):
     """The device answered, but not with usable data."""
 
 
+def hub_title(api_data: dict[str, Any]) -> str:
+    """Config entry title: product type plus the hub id (did), so several hubs differ."""
+    # Only air-quality records (5/6) means an AirLink; a WLL can list AirLink-style records too
+    types = {c.get("data_structure_type") for c in api_data.get("conditions", [])}
+    is_airlink = bool(types) and types <= {5, 6}
+    name = f"Davis {'AirLink' if is_airlink else 'WeatherLink Live'}"
+    did = api_data.get("did")
+    return f"{name} {did}" if did else name
+
+
 class DavisWeatherLinkLive:
-    def __init__(self, api_url, websession, deviceID):
+    def __init__(
+        self,
+        api_url: str,
+        websession: aiohttp.ClientSession,
+        deviceID: str,
+    ) -> None:
         self.api_url = api_url
         self.injected_websession = websession
         self.deviceID = deviceID
 
     # POSIX / unix timestamp to datetime object
     @staticmethod
-    def unix_to_datetime(unix_timestamp: int) -> datetime:
+    def unix_to_datetime(unix_timestamp: Any) -> datetime | None:
         try:
             return (
                 datetime.fromtimestamp(unix_timestamp, timezone.utc)
@@ -76,8 +94,9 @@ class DavisWeatherLinkLive:
 
     # Rainfall amount calculation based on rain value depending on cup size of weather station
     @staticmethod
-    def calculate_rain_amount(rain_amount: int, rain_unit: int) -> float | None:
-        factor = {1: 0.01, 2: 0.2, 3: 0.1, 4: 0.001}.get(rain_unit)
+    def calculate_rain_amount(rain_amount: float | None, rain_unit: int | None) -> float | None:
+        factors: dict[int | None, float] = {1: 0.01, 2: 0.2, 3: 0.1, 4: 0.001}
+        factor = factors.get(rain_unit)
         if factor is None:  # unknown cup size
             return None
 
@@ -96,7 +115,7 @@ class DavisWeatherLinkLive:
     def zero_float_if_none(value: float | None) -> float:
         return 0.0 if value is None else value
 
-    def parse_weather_data(self, data: dict) -> dict:
+    def parse_weather_data(self, data: dict[str, Any]) -> dict[str, Any]:
         _LOGGER.debug("Parsing weather data: %s", data)
 
         body = data.get("data") or {}
@@ -106,7 +125,7 @@ class DavisWeatherLinkLive:
         if body.get("conditions") is None:
             raise DavisApiError("API response missing conditions")
 
-        weather_data = {"raw_api": data}
+        weather_data: dict[str, Any] = {"raw_api": data}
         for condition in body["conditions"]:
             data_type = condition.get("data_structure_type")
 
@@ -370,13 +389,13 @@ class DavisWeatherLinkLive:
 
         return weather_data
 
-    async def get_weather_data(self) -> dict:
+    async def get_weather_data(self) -> dict[str, Any]:
         """Fetch weather data from API and parse JSON response.
 
         Raises aiohttp.ClientError, TimeoutError or DavisApiError on failure.
         """
         async with self.injected_websession.get(
-            self.api_url, timeout=API_TIMEOUT
+            self.api_url, timeout=aiohttp.ClientTimeout(total=API_TIMEOUT)
         ) as response:
             if response.status != 200:
                 raise DavisApiError(

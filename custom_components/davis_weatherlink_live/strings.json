@@ -280,6 +280,18 @@
                         }
                     }
                 }
+            },
+            "reconfigure": {
+                "title": "Change device address",
+                "description": "Point this entry at the same WeatherLink Live or AirLink device at a new address. These settings are also in Configure.",
+                "data": {
+                    "api_host": "Hostname or IP Address",
+                    "api_path": "API Path"
+                },
+                "data_description": {
+                    "api_host": "Host or IP Address of your WeatherLink Live or AirLink device",
+                    "api_path": "API endpoint on your WeatherLink Live or AirLink device"
+                }
             }
         },
         "error": {
@@ -291,7 +303,9 @@
         },
         "abort": {
             "already_configured": "This device is already configured",
-            "cannot_connect": "Can't reach the discovered device"
+            "cannot_connect": "Can't reach the discovered device",
+            "reconfigure_successful": "Settings updated",
+            "wrong_device": "That address is a different Davis device than the one this entry was set up with"
         }
     },
     "options": {
@@ -339,6 +353,17 @@
             "cannot_connect": "Can't reach the device. Check the host, and that it's on and on the same network. The WeatherLink Live handles one request at a time, so if another app is polling it, try again.",
             "invalid_response": "Connected, but the device didn't return WeatherLink data. Check the API Path.",
             "unknown": "Unexpected error, see the logs."
+        }
+    },
+    "exceptions": {
+        "ha_too_old": {
+            "message": "Davis WeatherLink Live requires Home Assistant {min_version} or newer (running {version}). Please upgrade Home Assistant."
+        },
+        "missing_did": {
+            "message": "The Davis API response is missing the device id (did)"
+        },
+        "update_failed": {
+            "message": "Error communicating with the Davis device: {error}"
         }
     }
 }

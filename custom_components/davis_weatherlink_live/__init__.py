@@ -18,6 +18,7 @@ from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import DOMAIN
 from .coordinator import WeatherCoordinator
+from .davis_weatherlink_live import hub_title
 from .realtime import RealtimeListener
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,19 +62,23 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: MyConfigEntry) ->
     """Set up Davis WeatherLink Live from a config entry."""
     if AwesomeVersion(HA_VERSION) < MIN_HA_VERSION:
         raise ConfigEntryError(
-            f"Davis WeatherLink Live requires Home Assistant {MIN_HA_VERSION} or newer "
-            f"(running {HA_VERSION}). Please upgrade Home Assistant."
+            translation_domain=DOMAIN,
+            translation_key="ha_too_old",
+            translation_placeholders={"min_version": MIN_HA_VERSION, "version": HA_VERSION},
         )
 
     coordinator = WeatherCoordinator(hass, config_entry)
     # Raises ConfigEntryNotReady if the device can't be reached, so HA retries
     await coordinator.async_config_entry_first_refresh()
 
-    did = coordinator.data["raw_api"]["data"].get("did")
+    api_data = coordinator.data["raw_api"]["data"]
+    did = api_data.get("did")
     if not did:  # needed for unique ids; never build "..._None" ids
-        raise ConfigEntryNotReady("Davis API response is missing the device id (did)")
+        raise ConfigEntryNotReady(translation_domain=DOMAIN, translation_key="missing_did")
     if config_entry.unique_id != did:  # older entries: none, or the zeroconf hostname
         hass.config_entries.async_update_entry(config_entry, unique_id=did)
+    if config_entry.title == "Davis Device":  # old default name; a user-chosen name is kept
+        hass.config_entries.async_update_entry(config_entry, title=hub_title(api_data))
 
     # Old ISS/soil ids ("temp_tx1") weren't unique across hubs; add the hub id
     migrate_entities(er.async_get(hass), config_entry.entry_id, did)

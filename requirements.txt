@@ -4,3 +4,4 @@
 # "homeassistant" in hacs.json, and the README to match.
 pytest-homeassistant-custom-component>=0.13.348
 aiohttp
+mypy

@@ -68,7 +68,11 @@ class WeatherCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 return self.data
             # The coordinator logs this outage and its recovery once by itself
             self._serving_cache = False
-            raise UpdateFailed(f"Error communicating with Davis API: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
         if self._serving_cache:
             _LOGGER.info("Davis API is responding again")

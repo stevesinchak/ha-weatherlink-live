@@ -12,7 +12,7 @@ import json
 import logging
 import time
 from collections.abc import Callable
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 import aiohttp
@@ -59,7 +59,7 @@ def is_realtime_key(key: str) -> bool:
     return bool(sep) and field in REALTIME_FIELDS
 
 
-def parse_realtime(packet: dict, did: str) -> dict[str, Any]:
+def parse_realtime(packet: dict[str, Any], did: str) -> dict[str, Any]:
     """Map an ISS broadcast packet to the same keys and units the poller produces."""
     out: dict[str, Any] = {}
     for c in packet.get("conditions") or []:
@@ -68,7 +68,7 @@ def parse_realtime(packet: dict, did: str) -> dict[str, Any]:
         sfx = f"_tx{c.get('txid')}_{did}"
         size = c.get("rain_size")
 
-        def rain(value, size=size):
+        def rain(value: float | None, size: int | None = size) -> float | None:
             return Davis.calculate_rain_amount(value, size)
 
         out.update(
@@ -102,7 +102,7 @@ class _Protocol(asyncio.DatagramProtocol):
     def __init__(self, listener: RealtimeListener) -> None:
         self._listener = listener
 
-    def datagram_received(self, data: bytes, addr: tuple) -> None:
+    def datagram_received(self, data: bytes, addr: tuple[str | Any, int]) -> None:
         self._listener.handle_packet(data, addr)
 
     def error_received(self, exc: Exception) -> None:
@@ -183,7 +183,7 @@ class RealtimeListener:
             self._transport.close()
             self._transport = None
 
-    async def _async_first_request(self, _now=None) -> None:
+    async def _async_first_request(self, _now: datetime | None = None) -> None:
         self._unsub_first = None
         await self._async_request_with_retry()
         if self._transport:  # still running (a hub "no" stops the listener)
@@ -225,16 +225,16 @@ class RealtimeListener:
         async with self._session.get(
             f"{self._base_url}/v1/real_time",
             params={"duration": REALTIME_REQUEST_DURATION},
-            timeout=API_TIMEOUT,
+            timeout=aiohttp.ClientTimeout(total=API_TIMEOUT),
         ) as response:
             if 400 <= response.status < 500:  # 409: no ISS; 404: AirLink has no endpoint
                 raise DavisApiError(f"real_time request returned HTTP {response.status}")
             response.raise_for_status()  # 5xx: hub busy, retried on renewal
             body = await response.json(content_type=None)
         _LOGGER.debug("Real-time broadcast requested from %s: %s", self._base_url, body)
-        return body["data"]["broadcast_port"]
+        return int(body["data"]["broadcast_port"])
 
-    async def _async_renew(self, _now=None) -> None:
+    async def _async_renew(self, _now: datetime | None = None) -> None:
         packets, self._packets = self._packets, 0
         _LOGGER.debug(
             "Real-time: %d UDP packets in the last %ss for %s",
@@ -253,7 +253,7 @@ class RealtimeListener:
             )
         await self._async_request_with_retry()
 
-    def handle_packet(self, data: bytes, addr: tuple | None = None) -> None:
+    def handle_packet(self, data: bytes, addr: tuple[str | Any, int] | None = None) -> None:
         """Store values from one UDP packet and notify sensors if anything changed."""
         self._packets += 1
         _LOGGER.debug("Real-time packet from %s (%d bytes): %s", addr, len(data), data[:500])

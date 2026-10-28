@@ -1,0 +1,12 @@
+{
+    "entity": {
+        "sensor": {
+            "wind_dir_last_rose": {
+                "default": "mdi:compass-outline"
+            },
+            "wind_dir_scalar_avg_last_10_min_rose": {
+                "default": "mdi:compass-outline"
+            }
+        }
+    }
+}

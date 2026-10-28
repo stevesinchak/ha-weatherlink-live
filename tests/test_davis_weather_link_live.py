@@ -5,6 +5,7 @@ import pytest
 from custom_components.davis_weatherlink_live.davis_weatherlink_live import (
     DavisApiError,
     DavisWeatherLinkLive,
+    hub_title,
 )
 
 
@@ -163,6 +164,19 @@ def test_validate_host():
 
 
 def test_unknown_device_type_has_no_sensors():
-    from custom_components.davis_weatherlink_live.sensor import get_device_sensors
+    from custom_components.davis_weatherlink_live.sensor import (
+        get_device_name,
+        get_device_sensors,
+    )
 
     assert get_device_sensors({"data_structure_type": 99, "lsid": 1}, "E1", "DID") == ()
+    assert get_device_name({"data_structure_type": 99}) is None
+
+
+def test_hub_title():
+    assert hub_title({"did": "001D0A100021", "conditions": [{"data_structure_type": 6}]}) == (
+        "Davis AirLink 001D0A100021"
+    )
+    wll = {"did": "002E0B349999", "conditions": [{"data_structure_type": t} for t in (1, 3, 4, 6)]}
+    assert hub_title(wll) == "Davis WeatherLink Live 002E0B349999"
+    assert hub_title({}) == "Davis WeatherLink Live"  # no did: no trailing "None"

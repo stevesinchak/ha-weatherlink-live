@@ -20,7 +20,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import API_INITIAL_INTERVAL, API_INITIAL_MAX_CACHE_AGE, API_PATH, DOMAIN
-from .davis_weatherlink_live import DavisApiError, DavisWeatherLinkLive
+from .davis_weatherlink_live import DavisApiError, DavisWeatherLinkLive, hub_title
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,8 +37,8 @@ def _validate(user_input: dict[str, Any]) -> dict[str, str]:
 
 async def _test_connection(
     hass: HomeAssistant, user_input: dict[str, Any]
-) -> tuple[str | None, str | None]:
-    """Fetch data once from the device; return (form error key or None, hub did)."""
+) -> tuple[str | None, dict[str, Any]]:
+    """Fetch data once from the device; return (form error key or None, its API data)."""
     client = DavisWeatherLinkLive(
         f"http://{user_input['api_host']}{user_input['api_path']}",
         async_get_clientsession(hass),
@@ -47,19 +47,29 @@ async def _test_connection(
     try:
         data = await client.get_weather_data()
     except DavisApiError:
-        return "invalid_response", None
+        return "invalid_response", {}
     except (aiohttp.ClientError, TimeoutError):
-        return "cannot_connect", None
+        return "cannot_connect", {}
     except Exception:  # noqa: BLE001 - show a form error instead of crashing the flow
         _LOGGER.exception("Unexpected error testing the Davis connection")
-        return "unknown", None
-    return None, data["raw_api"]["data"].get("did")
+        return "unknown", {}
+    api_data: dict[str, Any] = data["raw_api"]["data"]
+    return None, api_data
 
 
-def _build_schema(defaults: dict[str, Any]) -> vol.Schema:
+def _schema(fields: dict[Any, Any]) -> Any:
+    """A form schema. Typed Any because HA moved form schemas from voluptuous to probatio.
+
+    shortcut: voluptuous is kept so HA 2026.7 still works; switch to probatio once
+    MIN_HA_VERSION is a release that ships it.
+    """
+    return vol.Schema(fields)
+
+
+def _build_schema(defaults: dict[str, Any]) -> Any:
     """Form schema shared by the config and options flows, pre-filled from defaults."""
     cache = defaults.get("cache_section", {})
-    return vol.Schema(
+    return _schema(
         {
             vol.Required("api_host", default=defaults.get("api_host", "")): cv.string,
             vol.Required("api_path", default=defaults.get("api_path", API_PATH)): cv.string,
@@ -68,7 +78,7 @@ def _build_schema(defaults: dict[str, Any]) -> vol.Schema:
                 default=defaults.get("update_interval", API_INITIAL_INTERVAL),
             ): cv.positive_int,
             vol.Required("cache_section"): section(
-                vol.Schema(
+                _schema(
                     {
                         vol.Required("cache", default=cache.get("cache", False)): bool,
                         vol.Required(
@@ -80,7 +90,7 @@ def _build_schema(defaults: dict[str, Any]) -> vol.Schema:
                 {"collapsed": True},
             ),
             vol.Required("realtime_section"): section(
-                vol.Schema(
+                _schema(
                     {
                         vol.Required(
                             "realtime",
@@ -107,9 +117,10 @@ class WeatherStationConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Zeroconf doesn't include the hub id (did), so ask the device once
         host = discovery_info.host
-        error, did = await _test_connection(
+        error, api_data = await _test_connection(
             self.hass, {"api_host": host, "api_path": API_PATH}
         )
+        did = api_data.get("did")
         if error or not did:
             return self.async_abort(reason="cannot_connect")
 
@@ -136,7 +147,8 @@ class WeatherStationConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({"api_host": user_input["api_host"]})
             errors = _validate(user_input)
             if not errors:
-                error, did = await _test_connection(self.hass, user_input)
+                error, api_data = await _test_connection(self.hass, user_input)
+                did = api_data.get("did")
                 if error:
                     errors["base"] = error
                 elif did:
@@ -145,7 +157,7 @@ class WeatherStationConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._abort_if_unique_id_configured()
             if not errors:
                 return self.async_create_entry(
-                    title="Davis Device",
+                    title=hub_title(api_data),
                     data={},
                     options=user_input,  # options so they can be changed later
                 )
@@ -154,6 +166,41 @@ class WeatherStationConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=_build_schema(
                 user_input or {"api_host": self._discovered_host or ""}
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Change the host/path of an existing entry (also editable in Configure)."""
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            errors = _validate({**entry.options, **user_input})
+            if not errors:
+                error, api_data = await _test_connection(self.hass, user_input)
+                if error:
+                    errors["base"] = error
+                else:
+                    # Must be the same hub, or every sensor would point at another station
+                    await self.async_set_unique_id(api_data.get("did"))
+                    self._abort_if_unique_id_mismatch(reason="wrong_device")
+                    return self.async_update_reload_and_abort(
+                        entry, options={**entry.options, **user_input}
+                    )
+
+        defaults = user_input or entry.options
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=_schema(
+                {
+                    vol.Required("api_host", default=defaults.get("api_host", "")): cv.string,
+                    vol.Required(
+                        "api_path", default=defaults.get("api_path", API_PATH)
+                    ): cv.string,
+                }
             ),
             errors=errors,
         )
