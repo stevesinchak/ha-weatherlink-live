@@ -241,7 +241,6 @@
             "pct_pm_data_last_24_hours": {
                 "name": "PM Data Last 24 Hours"
             }
-
         }
     },
     "config": {
@@ -257,7 +256,7 @@
                     "api_path": "API endpoint on your WeatherLink Live device",
                     "update_interval": "Amount of time between sensor updates in seconds"
                 },
-                 "sections": {
+                "sections": {
                     "cache_section": {
                         "name": "Optional: Advanced Data Caching",
                         "description": "If a Davis WeatherLink Live or AirLink device is temporarily unreachable due to connectivity issues or simultaneous API usage, Home Assistant sensors will display as “Unavailable.” Advanced data caching reuses the last successful API response to bridge short outages, but cached data will eventually expire to prevent prolonged reporting of stale values if the API remains down.",
@@ -269,13 +268,44 @@
                             "cache": "Prevents “Unavailable” sensor values until cache expires",
                             "cache_age": "Amount of time in Seconds before cached data is discarded and sensors display “Unavailable”"
                         }
+                    },
+                    "realtime_section": {
+                        "name": "Optional: Real-Time Wind & Rain (WeatherLink Live only)",
+                        "description": "Updates wind and rain sensors every 2.5 seconds using the WeatherLink Live UDP broadcast (port 22222). Home Assistant must be on the same local network as the WLL device. All other sensors keep using the configured polling update interval.",
+                        "data": {
+                            "realtime": "Enable real-time wind & rain updates"
+                        },
+                        "data_description": {
+                            "realtime": "Off by default. If the WLL device can't broadcast, a warning is logged and normal polling continues. Real-time updates write more often to the Home Assistant database."
+                        }
                     }
+                }
+            },
+            "reconfigure": {
+                "title": "Change device address",
+                "description": "Point this entry at the same WeatherLink Live or AirLink device at a new address. These settings are also in Configure.",
+                "data": {
+                    "api_host": "Hostname or IP Address",
+                    "api_path": "API Path"
+                },
+                "data_description": {
+                    "api_host": "Host or IP Address of your WeatherLink Live or AirLink device",
+                    "api_path": "API endpoint on your WeatherLink Live or AirLink device"
                 }
             }
         },
         "error": {
             "api_host_http_not_allowed": "Enter only the hostname or IP address, no 'http' or 'https'",
-            "update_interval_too_low": "The Davis API endpoint is updated every 10 seconds, shorter intervals will duplicate data and waste storage!"
+            "update_interval_too_low": "The Davis API endpoint is updated every 10 seconds, shorter intervals will duplicate data and waste storage!",
+            "cannot_connect": "Can't reach the device. Check the host, and that it's on and on the same network. The WeatherLink Live handles one request at a time, so if another app is polling it, try again.",
+            "invalid_response": "Connected, but the device didn't return WeatherLink data. Check the API Path.",
+            "unknown": "Unexpected error, see the logs."
+        },
+        "abort": {
+            "already_configured": "This device is already configured",
+            "cannot_connect": "Can't reach the discovered device",
+            "reconfigure_successful": "Settings updated",
+            "wrong_device": "That address is a different Davis device than the one this entry was set up with"
         }
     },
     "options": {
@@ -303,13 +333,37 @@
                             "cache": "Prevents “Unavailable” sensor values until cache expires",
                             "cache_age": "Amount of time in Seconds before cached data is discarded and sensors display “Unavailable”"
                         }
+                    },
+                    "realtime_section": {
+                        "name": "Optional: Real-Time Wind & Rain (WeatherLink Live only)",
+                        "description": "Updates wind and rain sensors every 2.5 seconds using the WeatherLink Live UDP broadcast (port 22222). Home Assistant must be on the same local network as the WLL device. All other sensors keep using the configured polling update interval.",
+                        "data": {
+                            "realtime": "Enable real-time wind & rain updates"
+                        },
+                        "data_description": {
+                            "realtime": "Off by default. If the WLL device can't broadcast, a warning is logged and normal polling continues. Real-time updates write more often to the Home Assistant database."
+                        }
                     }
                 }
             }
         },
         "error": {
             "api_host_http_not_allowed": "Enter only the hostname or IP address, no 'http' or 'https'",
-            "update_interval_too_low": "The Davis API endpoint is updated every 10 seconds, shorter intervals will duplicate data and waste storage!"
+            "update_interval_too_low": "The Davis API endpoint is updated every 10 seconds, shorter intervals will duplicate data and waste storage!",
+            "cannot_connect": "Can't reach the device. Check the host, and that it's on and on the same network. The WeatherLink Live handles one request at a time, so if another app is polling it, try again.",
+            "invalid_response": "Connected, but the device didn't return WeatherLink data. Check the API Path.",
+            "unknown": "Unexpected error, see the logs."
+        }
+    },
+    "exceptions": {
+        "ha_too_old": {
+            "message": "Davis WeatherLink Live requires Home Assistant {min_version} or newer (running {version}). Please upgrade Home Assistant."
+        },
+        "missing_did": {
+            "message": "The Davis API response is missing the device id (did)"
+        },
+        "update_failed": {
+            "message": "Error communicating with the Davis device: {error}"
         }
     }
 }

@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+import aiohttp
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 from homeassistant.config_entries import (
@@ -12,183 +13,232 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
-    OptionsFlowWithConfigEntry,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import section
-from homeassistant.helpers.selector import selector
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import API_INITIAL_INTERVAL, API_INITIAL_MAX_CACHE_AGE, API_PATH, DOMAIN
+from .davis_weatherlink_live import DavisApiError, DavisWeatherLinkLive, hub_title
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def validate_api_host(api_host: str) -> str:
-    """Ensure api_host does not contain 'http' or 'https'."""
-    if "http" in api_host.lower():
-        raise vol.Invalid("api_host_http_not_allowed")
-    return api_host
+def _validate(user_input: dict[str, Any]) -> dict[str, str]:
+    """Return form errors keyed by field."""
+    errors: dict[str, str] = {}
+    if "://" in user_input["api_host"]:  # a URL, not a host (allows e.g. weather-httpd.local)
+        errors["api_host"] = "api_host_http_not_allowed"
+    if user_input["update_interval"] < 10:
+        errors["update_interval"] = "update_interval_too_low"
+    return errors
 
 
-def validate_update_interval(update_interval: int) -> int:
-    if update_interval < 10:
-        raise vol.Invalid("update_interval_too_low")
-    return update_interval
+async def _test_connection(
+    hass: HomeAssistant, user_input: dict[str, Any]
+) -> tuple[str | None, dict[str, Any]]:
+    """Fetch data once from the device; return (form error key or None, its API data)."""
+    client = DavisWeatherLinkLive(
+        f"http://{user_input['api_host']}{user_input['api_path']}",
+        async_get_clientsession(hass),
+        "",
+    )
+    try:
+        data = await client.get_weather_data()
+    except DavisApiError:
+        return "invalid_response", {}
+    except (aiohttp.ClientError, TimeoutError):
+        return "cannot_connect", {}
+    except Exception:  # noqa: BLE001 - show a form error instead of crashing the flow
+        _LOGGER.exception("Unexpected error testing the Davis connection")
+        return "unknown", {}
+    api_data: dict[str, Any] = data["raw_api"]["data"]
+    return None, api_data
+
+
+def _schema(fields: dict[Any, Any]) -> Any:
+    """A form schema. Typed Any because HA moved form schemas from voluptuous to probatio.
+
+    shortcut: voluptuous is kept so HA 2026.7 still works; switch to probatio once
+    MIN_HA_VERSION is a release that ships it.
+    """
+    return vol.Schema(fields)
+
+
+def _build_schema(defaults: dict[str, Any]) -> Any:
+    """Form schema shared by the config and options flows, pre-filled from defaults."""
+    cache = defaults.get("cache_section", {})
+    return _schema(
+        {
+            vol.Required("api_host", default=defaults.get("api_host", "")): cv.string,
+            vol.Required("api_path", default=defaults.get("api_path", API_PATH)): cv.string,
+            vol.Required(
+                "update_interval",
+                default=defaults.get("update_interval", API_INITIAL_INTERVAL),
+            ): cv.positive_int,
+            vol.Required("cache_section"): section(
+                _schema(
+                    {
+                        vol.Required("cache", default=cache.get("cache", False)): bool,
+                        vol.Required(
+                            "cache_age",
+                            default=cache.get("cache_age", API_INITIAL_MAX_CACHE_AGE),
+                        ): cv.positive_int,
+                    }
+                ),
+                {"collapsed": True},
+            ),
+            vol.Required("realtime_section"): section(
+                _schema(
+                    {
+                        vol.Required(
+                            "realtime",
+                            default=defaults.get("realtime_section", {}).get("realtime", False),
+                        ): bool,
+                    }
+                ),
+                {"collapsed": True},
+            ),
+        }
+    )
 
 
 class WeatherStationConfigFlow(ConfigFlow, domain=DOMAIN):
-    async def async_step_zeroconf(self, discovery_info):
+    """Config flow for Davis WeatherLink Live."""
+
+    _discovered_host: str | None = None
+
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle a device found via zeroconf."""
         _LOGGER.debug("Zeroconf discovery_info: %s", discovery_info)
 
+        # Zeroconf doesn't include the hub id (did), so ask the device once
         host = discovery_info.host
+        error, api_data = await _test_connection(
+            self.hass, {"api_host": host, "api_path": API_PATH}
+        )
+        did = api_data.get("did")
+        if error or not did:
+            return self.async_abort(reason="cannot_connect")
 
-        # The WeatherLink Live device does not expose its serial number directly via Zeroconf.
-        # Therefore, we must use the hostname which includes the last six digits of the serial number for a unique id.
-        # Example hostname: "weatherlinklive-33a9cb.local."
-        unique_id = discovery_info.hostname
-        _LOGGER.debug("Discovered unique id: %s", unique_id)
+        await self.async_set_unique_id(did)
+        if entry := self.hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, did):
+            # Known hub at a (possibly) new IP: follow it; only reloads if the host changed
+            return self.async_update_reload_and_abort(
+                entry,
+                options={**entry.options, "api_host": host},
+                reason="already_configured",
+                reload_even_if_entry_is_unchanged=False,
+            )
 
-        # Set unique_id and abort if it was set by Zeroconf to avoid duplicate device discovery
-        await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured()
-
-        return await self._async_set_host(host)
-
-    async def _async_set_host(self, host):
-        self.context["host"] = host
-        _LOGGER.debug("Host set to: %s", host)
+        self._discovered_host = host
         return await self.async_step_user()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
+        """Handle the setup form."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            try:
-                validate_api_host(user_input["api_host"])
-                validate_update_interval(user_input["update_interval"])
-
+            self._async_abort_entries_match({"api_host": user_input["api_host"]})
+            errors = _validate(user_input)
+            if not errors:
+                error, api_data = await _test_connection(self.hass, user_input)
+                did = api_data.get("did")
+                if error:
+                    errors["base"] = error
+                elif did:
+                    # Same hub already added under another host or IP
+                    await self.async_set_unique_id(did, raise_on_progress=False)
+                    self._abort_if_unique_id_configured()
+            if not errors:
                 return self.async_create_entry(
-                    title="Davis Device",
-                    data={},  # Store any required data here
-                    options=user_input,  # Store user input in options so they can change them later
+                    title=hub_title(api_data),
+                    data={},
+                    options=user_input,  # options so they can be changed later
                 )
-
-            except vol.Invalid as e:
-                if str(e) == "api_host_http_not_allowed":
-                    errors["api_host"] = "api_host_http_not_allowed"
-                elif str(e) == "update_interval_too_low":
-                    errors["update_interval"] = "update_interval_too_low"
-
-        data_schema = vol.Schema(
-            {
-                vol.Required(
-                    "api_host", default=self.context.get("host", "")
-                ): cv.string,  # Grab host from Zeroconf if available
-                vol.Required("api_path", default=API_PATH): cv.string,
-                vol.Required(
-                    "update_interval", default=API_INITIAL_INTERVAL
-                ): cv.positive_int,
-                vol.Required("cache_section"): section(
-                    vol.Schema(
-                        {
-                            vol.Required("cache", default=False): bool,
-                            vol.Required(
-                                "cache_age", default=API_INITIAL_MAX_CACHE_AGE
-                            ): cv.positive_int,
-                        }
-                    ),
-                    {"collapsed": True},
-                ),
-            }
-        )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=data_schema,
+            data_schema=_build_schema(
+                user_input or {"api_host": self._discovered_host or ""}
+            ),
             errors=errors,
-            description_placeholders={
-                "api_host": "The hostname or IP address of the WeatherLink Live device.",
-                "api_path": "The API path for accessing the WeatherLink Live data.",
-                "update_interval": "The interval (in seconds) at which data should be updated.",
-                "cache": "Enable or disable caching of API responses for device connection issues.",
-                "cache_age": "The maximum age (in seconds) of cached data before it is considered expired.",
-            },
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Change the host/path of an existing entry (also editable in Configure)."""
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            errors = _validate({**entry.options, **user_input})
+            if not errors:
+                error, api_data = await _test_connection(self.hass, user_input)
+                if error:
+                    errors["base"] = error
+                else:
+                    # Must be the same hub, or every sensor would point at another station
+                    await self.async_set_unique_id(api_data.get("did"))
+                    self._abort_if_unique_id_mismatch(reason="wrong_device")
+                    return self.async_update_reload_and_abort(
+                        entry, options={**entry.options, **user_input}
+                    )
+
+        defaults = user_input or entry.options
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=_schema(
+                {
+                    vol.Required("api_host", default=defaults.get("api_host", "")): cv.string,
+                    vol.Required(
+                        "api_path", default=defaults.get("api_path", API_PATH)
+                    ): cv.string,
+                }
+            ),
+            errors=errors,
         )
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
-        return WeatherStationOptionsFlow(config_entry)
+    def async_get_options_flow(config_entry: ConfigEntry) -> WeatherStationOptionsFlow:
+        """Return the options flow."""
+        return WeatherStationOptionsFlow()
 
 
-class WeatherStationOptionsFlow(OptionsFlowWithConfigEntry):
-    # def __init__(self, config_entry):
+class WeatherStationOptionsFlow(OptionsFlow):
+    """Options flow for Davis WeatherLink Live."""
 
-    async def async_step_init(self, user_input=None):
-        errors = {}
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the options form."""
+        errors: dict[str, str] = {}
 
         if user_input is not None:
-            try:
-                validate_api_host(user_input["api_host"])
-                validate_update_interval(user_input["update_interval"])
-
-                # Update options with new values
+            errors = _validate(user_input)
+            current = self.config_entry.options
+            # Only test a new host/path: the WLL takes one connection at a time, so testing
+            # on every save could collide with the running poller and show a false error
+            target_changed = (user_input["api_host"], user_input["api_path"]) != (
+                current.get("api_host"),
+                current.get("api_path"),
+            )
+            if not errors and target_changed:
+                error, _ = await _test_connection(self.hass, user_input)
+                if error:
+                    errors["base"] = error
+            if not errors:
                 return self.async_create_entry(title="", data=user_input)
-
-            except vol.Invalid as e:
-                if str(e) == "api_host_http_not_allowed":
-                    errors["api_host"] = "api_host_http_not_allowed"
-                elif str(e) == "update_interval_too_low":
-                    errors["update_interval"] = "update_interval_too_low"
-
-        # Pre-fill form fields with current options
-        data_schema = vol.Schema(
-            {
-                vol.Required(
-                    "api_host", default=self.config_entry.options.get("api_host", "")
-                ): cv.string,
-                vol.Required(
-                    "api_path", default=self.config_entry.options.get("api_path", "")
-                ): cv.string,
-                vol.Required(
-                    "update_interval",
-                    default=self.config_entry.options.get(
-                        "update_interval", API_INITIAL_INTERVAL
-                    ),
-                ): cv.positive_int,
-                vol.Required("cache_section"): section(
-                    vol.Schema(
-                        {
-                            vol.Required(
-                                "cache",
-                                default=self.config_entry.options.get(
-                                    "cache_section", {}
-                                ).get("cache", False),
-                            ): bool,
-                            vol.Required(
-                                "cache_age",
-                                default=self.config_entry.options.get(
-                                    "cache_section", {}
-                                ).get("cache_age", API_INITIAL_MAX_CACHE_AGE),
-                            ): cv.positive_int,
-                        }
-                    ),
-                    {"collapsed": True},
-                ),
-            }
-        )
 
         return self.async_show_form(
             step_id="init",
-            data_schema=data_schema,
+            data_schema=_build_schema(user_input or dict(self.config_entry.options)),
             errors=errors,
-            description_placeholders={
-                "api_host": "The hostname or IP address of the WeatherLink Live device.",
-                "api_path": "The API path for accessing the WeatherLink Live data.",
-                "update_interval": "The interval (in seconds) at which data should be updated.",
-                "cache": "Enable or disable caching of API responses for device connection issues.",
-                "cache_age": "The maximum age (in seconds) of cached data before it is considered expired.",
-            },
         )

@@ -1,0 +1,86 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: The integration does not register any service actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency:
+    status: done
+    comment: The API client is bundled in davis_weatherlink_live.py; no PyPI requirements.
+  docs-actions:
+    status: exempt
+    comment: The integration does not register any service actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: The integration does not register any service actions.
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: The WeatherLink Live and AirLink local APIs have no authentication.
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: done
+    comment: >-
+      Entries are keyed by the hub id (did); zeroconf updates the stored host
+      when a known hub shows up at a new IP.
+  discovery: done
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices: done
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow:
+    status: done
+    comment: >-
+      Reconfigure changes host/path and checks it is the same hub (did); the
+      same fields also stay in the options flow so all settings are together.
+  repair-issues:
+    status: exempt
+    comment: >-
+      The integration has no problems a user can fix through a repair flow;
+      connection issues are handled by setup retry and logs.
+  stale-devices:
+    status: done
+    comment: >-
+      async_remove_config_entry_device lets users delete devices the hub no
+      longer reports, and blocks deleting live ones.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

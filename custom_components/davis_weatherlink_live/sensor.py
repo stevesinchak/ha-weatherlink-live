@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -21,19 +23,25 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfVolumetricFlux,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import MyConfigEntry
 from .const import DOMAIN
 from .coordinator import WeatherCoordinator
+from .realtime import RealtimeListener, is_realtime_key
 
 _LOGGER = logging.getLogger(__name__)
 
+# Entities only read coordinator data; the coordinator does the polling
+PARALLEL_UPDATES = 0
 
-def get_device_name(condition: tuple):
+
+def get_device_name(condition: dict[str, Any]) -> str | None:
     match condition.get("data_structure_type"):
         case 1:
             return "Davis ISS TX " + str(condition.get("txid"))
@@ -45,10 +53,14 @@ def get_device_name(condition: tuple):
             return "Davis LSS"  # + str(condition.get("lsid"))
         case 6:
             return "Davis AirLink AQM"  # + str(condition.get("lsid"))
+        case _:
+            return None
 
 
 # Device Sensor type helper that returns the correct sensors based on the device type
-def get_device_sensors(condition: tuple, deviceID: str):
+def get_device_sensors(
+    condition: dict[str, Any], deviceID: str, did: str | None
+) -> tuple[SensorEntityDescription, ...]:
     device_type = condition.get("data_structure_type")
 
     # Return the correct sensors based on the device type
@@ -60,77 +72,21 @@ def get_device_sensors(condition: tuple, deviceID: str):
 
     if device_type == 1:  # General weather outdoor sensors
         unique_id = condition.get("txid")
-        unique_key = f"_tx{unique_id}"
-        api_rain_size_value = condition.get("rain_size")
+        unique_key = f"_tx{unique_id}_{did}"
+        api_rain_size_value: Any = condition.get("rain_size")
 
-        # Get the unit for rain rate for
-        #    "rain_rate_last",
-        #    "rain_rate_hi",
-        #    "rain_rate_hi_last_15_min",
-
-        rain_rate_unit = None
-        match api_rain_size_value:
-            case 0:
-                rain_rate_unit = None
-            case 1:
-                _LOGGER.debug(
-                    "For condition type %s, and lsid %s, using imperial units with rain size id %s",
-                    device_type,
-                    condition.get("lsid"),
-                    api_rain_size_value,
-                )
-                rain_rate_unit = UnitOfVolumetricFlux.INCHES_PER_HOUR
-            case 2:
-                _LOGGER.debug(
-                    "For condition type %s, and lsid %s, using metric units with rain size id %s",
-                    device_type,
-                    condition.get("lsid"),
-                    api_rain_size_value,
-                )
-                rain_rate_unit = UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR
-            case 3:
-                _LOGGER.debug(
-                    "For condition type %s, and lsid %s, using metric units with rain size id %s",
-                    device_type,
-                    condition.get("lsid"),
-                    api_rain_size_value,
-                )
-                rain_rate_unit = UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR
-            case 4:
-                _LOGGER.debug(
-                    "For condition type %s, and lsid %s, using imperial units with rain size id %s",
-                    device_type,
-                    condition.get("lsid"),
-                    api_rain_size_value,
-                )
-                rain_rate_unit = UnitOfVolumetricFlux.INCHES_PER_HOUR
-            case _:
-                rain_rate_unit = None
-
-        # Get the unit for rain amount for
-        #    "rainfall_last_15_min",
-        #    "rainfall_last_60_min",
-        #    "rainfall_last_24_hr",
-        #    "rain_storm",
-        #    "rainfall_daily",
-        #    "rainfall_monthly",
-        #    "rainfall_year",
-        #    "rain_storm_last",
-
-        rain_amount_unit = None
-        match api_rain_size_value:
-            case 0:
-                rain_amount_unit = None
-            case 1:
-                rain_amount_unit = UnitOfLength.INCHES
-            case 2:
-                rain_amount_unit = UnitOfLength.MILLIMETERS
-            case 3:
-                rain_amount_unit = UnitOfLength.MILLIMETERS
-            case 4:
-                rain_amount_unit = UnitOfLength.INCHES
-            case _:
-                rain_amount_unit = None
+        rain_rate_unit = {
+            1: UnitOfVolumetricFlux.INCHES_PER_HOUR,
+            2: UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+            3: UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+            4: UnitOfVolumetricFlux.INCHES_PER_HOUR,
+        }.get(api_rain_size_value)
+        rain_amount_unit = {
+            1: UnitOfLength.INCHES,
+            2: UnitOfLength.MILLIMETERS,
+            3: UnitOfLength.MILLIMETERS,
+            4: UnitOfLength.INCHES,
+        }.get(api_rain_size_value)
 
         DST_1: tuple[SensorEntityDescription, ...] = (
             SensorEntityDescription(
@@ -229,7 +185,6 @@ def get_device_sensors(condition: tuple, deviceID: str):
             SensorEntityDescription(
                 key="wind_dir_last_rose" + unique_key,
                 translation_key="wind_dir_last_rose",
-                icon="mdi:compass-outline",
             ),
             SensorEntityDescription(
                 key="wind_speed_avg_last_1_min" + unique_key,
@@ -290,7 +245,6 @@ def get_device_sensors(condition: tuple, deviceID: str):
             SensorEntityDescription(
                 key="wind_dir_scalar_avg_last_10_min_rose" + unique_key,
                 translation_key="wind_dir_scalar_avg_last_10_min_rose",
-                icon="mdi:compass-outline",
             ),
             SensorEntityDescription(
                 key="wind_speed_hi_last_10_min" + unique_key,
@@ -411,7 +365,7 @@ def get_device_sensors(condition: tuple, deviceID: str):
                 translation_key="rainfall_daily",
                 native_unit_of_measurement=rain_amount_unit,
                 device_class=SensorDeviceClass.PRECIPITATION,
-                state_class=SensorStateClass.TOTAL,
+                state_class=SensorStateClass.TOTAL_INCREASING,
                 suggested_display_precision=2,
             ),
             SensorEntityDescription(
@@ -419,7 +373,7 @@ def get_device_sensors(condition: tuple, deviceID: str):
                 translation_key="rainfall_monthly",
                 native_unit_of_measurement=rain_amount_unit,
                 device_class=SensorDeviceClass.PRECIPITATION,
-                state_class=SensorStateClass.TOTAL,
+                state_class=SensorStateClass.TOTAL_INCREASING,
                 suggested_display_precision=2,
             ),
             SensorEntityDescription(
@@ -427,7 +381,7 @@ def get_device_sensors(condition: tuple, deviceID: str):
                 translation_key="rainfall_year",
                 native_unit_of_measurement=rain_amount_unit,
                 device_class=SensorDeviceClass.PRECIPITATION,
-                state_class=SensorStateClass.TOTAL,
+                state_class=SensorStateClass.TOTAL_INCREASING,
                 suggested_display_precision=2,
             ),
             SensorEntityDescription(
@@ -435,7 +389,7 @@ def get_device_sensors(condition: tuple, deviceID: str):
                 translation_key="rain_storm_last",
                 native_unit_of_measurement=rain_amount_unit,
                 device_class=SensorDeviceClass.PRECIPITATION,
-                state_class=SensorStateClass.TOTAL,
+                state_class=SensorStateClass.MEASUREMENT,
                 suggested_display_precision=2,
             ),
             SensorEntityDescription(
@@ -450,12 +404,11 @@ def get_device_sensors(condition: tuple, deviceID: str):
             ),
         )
 
-        # _LOGGER.debug("DST_1: %s", DST_1)
         return DST_1
 
     elif device_type == 2:  # Soil Moisture Sensors
         unique_id = condition.get("txid")
-        unique_key = f"_tx{unique_id}"
+        unique_key = f"_tx{unique_id}_{did}"
         DST_2: tuple[SensorEntityDescription, ...] = (
             SensorEntityDescription(
                 key="lsid" + unique_key,
@@ -623,6 +576,7 @@ def get_device_sensors(condition: tuple, deviceID: str):
                 translation_key="dew_point_in",
                 native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
                 device_class=SensorDeviceClass.TEMPERATURE,
+                state_class=SensorStateClass.MEASUREMENT,
             ),
             SensorEntityDescription(
                 key="heat_index_in" + unique_key,
@@ -637,7 +591,6 @@ def get_device_sensors(condition: tuple, deviceID: str):
     elif device_type == 6:  # WeatherLink Air Quality Monitors
         unique_id = condition.get("lsid")
         unique_key = f"_ls{unique_id}{deviceID}"
-        _LOGGER.debug("Unique Key: %s", unique_key)
         # Device Sensor Type 6: Weatherlink AQI Conditions
         DST_6: tuple[SensorEntityDescription, ...] = (
             SensorEntityDescription(
@@ -673,12 +626,13 @@ def get_device_sensors(condition: tuple, deviceID: str):
                 translation_key="dew_point",
                 native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
                 device_class=SensorDeviceClass.TEMPERATURE,
+                state_class=SensorStateClass.MEASUREMENT,
             ),
             SensorEntityDescription(
                 key="wet_bulb" + unique_key,
                 translation_key="wet_bulb",
                 native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
-                device_class=SensorDeviceClass.TEMPERATURE  ,
+                device_class=SensorDeviceClass.TEMPERATURE,
                 state_class=SensorStateClass.MEASUREMENT,
             ),
             SensorEntityDescription(
@@ -820,10 +774,8 @@ def get_device_sensors(condition: tuple, deviceID: str):
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
-            
         )
         return DST_6
-
 
     else:
         _LOGGER.warning("Unknown API device type %s", device_type)
@@ -834,67 +786,75 @@ async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: MyConfigEntry,
     async_add_entities: AddEntitiesCallback,
-):
-    # This gets the data update coordinator from the config entry runtime data as specified in your __init__.py
-    coordinator: WeatherCoordinator = config_entry.runtime_data.coordinator
+) -> None:
+    """Create sensors for every device in the API response, including ones added later."""
+    coordinator = config_entry.runtime_data.coordinator
+    entry_id = str(config_entry.entry_id)
+    known_lsids: set[Any] = set()
 
-    # Get latest data from the API via the coordinator refresh
-    # disabled as it was causing errors
-    # await coordinator.async_request_refresh()
+    @callback
+    def _add_new_devices() -> None:
+        api_data = coordinator.data["raw_api"]["data"]
+        did = api_data.get("did")
+        sensors: list[WeatherSensor] = []
+        for condition in api_data.get("conditions", []):
+            lsid = condition.get("lsid")
+            if lsid in known_lsids:
+                continue
+            known_lsids.add(lsid)
+            device_id = entry_id + str(lsid)
+            device_name = get_device_name(condition)
+            sensors.extend(
+                WeatherSensor(coordinator, description, device_id, device_name)
+                for description in get_device_sensors(condition, entry_id, did)
+            )
+        if sensors:
+            async_add_entities(sensors)
 
-    # Get api data from the coordinator
-    api_response = coordinator.data
-
-    # Create a container for all sensors, and build the sensor list based on each condition in api response and device type
-    for condition in (
-        api_response.get("raw_api", {}).get("data", {}).get("conditions", [])
-    ):
-        device_id = str(config_entry.entry_id) + str(condition.get("lsid"))
-        device_name = get_device_name(condition)
-        sensors = [
-            WeatherSensor(coordinator, description, device_id, device_name)
-            for description in get_device_sensors(condition, str(config_entry.entry_id))
-        ]
-        async_add_entities(sensors)
-
-    _LOGGER.debug("Sensory.py Coordinator API response: %s", api_response)
+    _add_new_devices()
+    # A transmitter added to the hub later shows up in a later poll
+    config_entry.async_on_unload(coordinator.async_add_listener(_add_new_devices))
 
 
-class WeatherSensor(CoordinatorEntity, SensorEntity):
+class WeatherSensor(CoordinatorEntity[WeatherCoordinator], SensorEntity):
+    """A single value from the Davis API."""
 
-    # Allow entity names to be customized as sensor.deviceName_descriptionKey
-    _attr_has_entity_name = True 
-    
+    _attr_has_entity_name = True
+
     def __init__(
         self,
-        coordinator,
+        coordinator: WeatherCoordinator,
         description: SensorEntityDescription,
         device_id: str,
-        device_name: str,
-    ):
+        device_name: str | None,
+    ) -> None:
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{description.key}"
-        self._device_id = device_id  # Store the device ID to link together
-        self._device_name = device_name
-        _LOGGER.debug(
-            "Sensor %s created with unique ID %s for device %s",
-            description.key,
-            self._attr_unique_id,
-            device_id,
+        self._attr_unique_id = description.key
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device_id)},
+            name=device_name,
+            manufacturer="Davis Instruments",
+            model="Davis WeatherLink Live / AirLink",
         )
 
     @property
-    def native_value(self):
-        return self.coordinator.data.get(self.entity_description.key)
+    def _realtime(self) -> RealtimeListener | None:
+        entry = self.coordinator.config_entry
+        return entry.runtime_data.realtime if entry else None
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        if self._realtime and is_realtime_key(self.entity_description.key):
+            self.async_on_remove(self._realtime.add_listener(self.async_write_ha_state))
 
     @property
-    def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self._device_id)},
-            # "name": "Davis Weather",
-            "name": self._device_name,
-            "manufacturer": "Davis Instruments",
-            "model": "Davis WeatherLink Live / AirLink",
-            "sw_version": "1.0",  # Add actual firmware version if Davis ever updates API
-        }
+    def native_value(self) -> StateType | datetime:
+        key = self.entity_description.key
+        value: StateType | datetime
+        if self._realtime:
+            fresh, value = self._realtime.value(key)
+            if fresh:
+                return value
+        value = self.coordinator.data.get(key)
+        return value
