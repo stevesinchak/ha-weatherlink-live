@@ -255,7 +255,9 @@ If you are a happy user and would like to support the project, please contribute
 
 ## Stats
 
-It is estimated that about 25% of Home Assistant users have opted into sharing the existence of their installation into Home Assistant Analytics.  Of those users, about 78% have opted into sharing detailed usage statistics which includes which custom integrations are installed.  Based on that data, the badge below shows the number of reported installations: ![Davis WeatherLink Live Installations](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Vaskivskyi/ha-analytics/refs/heads/main/docs/badges/davis_weatherlink_live/total.json)
+It is estimated that about 25% of Home Assistant users have opted into sharing the existence of their installation into Home Assistant Analytics.  Of those users, about 78% have opted into sharing detailed usage statistics which includes which custom integrations are installed.  Based on that data, the badge below shows the number of reported installations: 
+
+![Davis WeatherLink Live Installations](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Vaskivskyi/ha-analytics/refs/heads/main/docs/badges/davis_weatherlink_live/total.json)
 
 Some quick math to estimate total worldwide installations.  .25 x .78 = .195, or 19.5% of all Home Assistant users report custom integration usage. Then 1/.195 = 5.128, or about 5.1 times the number of reported installations.  So if the badge shows 75 reported installations, then the estimated total worldwide usage is about 384.
 
