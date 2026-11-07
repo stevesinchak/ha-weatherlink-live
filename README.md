@@ -55,26 +55,36 @@ This integration also supports the [local api](https://weatherlink.github.io/air
 
 > **Requires Home Assistant 2026.7.0 or newer.** On older versions the integration will fail to load.
 
-**Install with File Copy**
+**Option 1: Marketplace (recommended, Home Assistant 2026.11+)**
+
+[![Open your Home Assistant instance and open this repository in the Marketplace.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=stevesinchak&repository=ha-weatherlink-live&category=integration)
+
+1. Click the button above, or in Home Assistant go to **Settings → Marketplace** and search for `Davis WeatherLink Live`.
+
+2. On the project page, select **Install**, check the version, and select **Install** again. The first time you use the Marketplace, it asks you to confirm that community projects are not reviewed by the Home Assistant project. Select **I understand the risks and agree**.
+
+3. You don't need to restart. The setup screen opens right away, so continue with [Configuration](#configuration), step 2.
+
+Updates appear under **Settings → Updates**. Install them there, then restart Home Assistant when the repair notice asks.
+
+*Already installed through HACS?* There's nothing to do. Home Assistant 2026.11 moves HACS installs into the Marketplace automatically, and you keep getting updates.
+
+**Option 2: HACS (Home Assistant 2026.7 – 2026.10)**
+
+1. In HACS, search for `Davis WeatherLink Live` and open the listing. It's in the default HACS catalog, so you don't need to add a custom repository.
+
+2. Select **Download**, then restart Home Assistant and continue with [Configuration](#configuration).
+
+**Option 3: Manual file copy**
 
 1. Copy the entire `davis_weatherlink_live` directory from this repository into the `custom_components` directory on your Home Assistant installation. `custom_components` is nested within the base Home Assistant `config` directory; if it does not exist, you can create it. Tip: Use the [Studio Code Server](https://github.com/hassio-addons/addon-vscode/blob/main/vscode/DOCS.md) add-on for an easy way to navigate the file system and upload files.
 
 2. Restart Home Assistant so the custom integration is recognized. 
 
-**Install with Home Assistant Community Store**
-
-1. If you have HACS ([Home Assistant Community Store](https://www.hacs.xyz/)) installed on your Home Assistant server, you can add this repo as a Custom Repository. Simply click on the three dots in the top right of the Home Assistant Community Store page, and select `Custom repositories`.
-
-2. Copy and paste the URL of this repository `https://github.com/stevesinchak/ha-weatherlink-live` and set the Type to `Integration` and hit Add. 
-
-3. Then just search for `Davis WeatherLink Live` and click on the listing. Scroll down and hit Download to install. 
-
-4. Reboot your Home Assistant server, and you are ready to configure.
-
 
 ## Configuration
 
-1. There are two methods to add/enable the integration: 
+1. There are two methods to add/enable the integration (installed from the Marketplace? The setup screen already opened after install, so skip to step 2): 
 
     * Auto Discovery: If the WeatherLink Live is on the same network as your Home Assistant Server, the device should be auto-detected (thanks to Zeroconf) within a few minutes and will be listed under the Discovered section. Go to your [Home Assistant Integrations dashboard](https://my.home-assistant.io/redirect/integrations/) and hit the Add button, and jump to step 4. 
 
@@ -198,7 +208,9 @@ actions:
 
 ## Removal
 
-The integration can be uninstalled and removed with three steps:
+**Installed from the Marketplace:** go to **Settings → Marketplace**, open Davis WeatherLink Live, select ⋮ → **Uninstall**, and choose **Delete and uninstall**. This removes the devices, sensors, and integration files in one step.
+
+**Installed with HACS or by copying files:** the integration can be uninstalled and removed with three steps:
 
 1. Go to the [Davis WeatherLink Live 6100](https://my.home-assistant.io/redirect/integration/?domain=davis_weatherlink_live) integration page, click on the three dots to the right of the :gear: `Gear` button, and select `Delete`. Hit `DELETE` again on the confirmation screen. The device and sensor entities have been deleted, and the integration is no longer active. 
 

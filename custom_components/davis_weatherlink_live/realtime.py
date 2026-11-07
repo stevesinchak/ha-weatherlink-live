@@ -11,7 +11,7 @@ import asyncio
 import json
 import logging
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -59,7 +59,9 @@ def is_realtime_key(key: str) -> bool:
     return bool(sep) and field in REALTIME_FIELDS
 
 
-def parse_realtime(packet: dict[str, Any], did: str) -> dict[str, Any]:
+def parse_realtime(
+    packet: dict[str, Any], did: str, held: Mapping[str, Any] | None = None
+) -> dict[str, Any]:
     """Map an ISS broadcast packet to the same keys and units the poller produces."""
     out: dict[str, Any] = {}
     for c in packet.get("conditions") or []:
@@ -95,6 +97,17 @@ def parse_realtime(packet: dict[str, Any], did: str) -> dict[str, Any]:
                 "rainfall_year" + sfx: rain(c.get("rainfall_year")),
             }
         )
+        if c.get("wind_speed_last") == 0:  # hub sends dir 0 when calm; keep the last real direction
+            for key in ("wind_dir_last" + sfx, "wind_dir_last_rose" + sfx):
+                if held and key in held:
+                    out[key] = held[key]
+                else:
+                    out.pop(key)
+            _LOGGER.debug(
+                "Real-time: zero wind speed detected for tx%s, using last wind direction %s",
+                c.get("txid"),
+                out.get("wind_dir_last" + sfx),  # None = no prior direction yet, polled value shown
+            )
     return out
 
 
@@ -266,7 +279,7 @@ class RealtimeListener:
                     self._did,
                 )
                 return  # another hub on the LAN, or junk
-            parsed = parse_realtime(packet, self._did)
+            parsed = parse_realtime(packet, self._did, self._values)
         except Exception as err:  # noqa: BLE001 - one bad packet must not stop the stream
             _LOGGER.debug("Ignoring bad real-time packet: %s", err)
             return

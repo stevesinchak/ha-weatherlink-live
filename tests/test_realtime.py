@@ -89,6 +89,23 @@ def test_notifies_only_on_change():
     assert listener.value(f"wind_speed_last_tx1_{DID}") == (True, 5)
 
 
+def test_calm_wind_holds_last_direction():
+    listener = make_listener()
+    calls = []
+    listener.add_listener(lambda: calls.append(1))
+    listener.handle_packet(packet())  # 2 mph from 90°
+    for _ in range(3):  # long calm stretch: hub reports dir 0
+        listener.handle_packet(packet(wind_speed_last=0.0, wind_dir_last=0))
+    assert listener.value(f"wind_dir_last_tx1_{DID}") == (True, 90)
+    assert listener.value(f"wind_dir_last_rose_tx1_{DID}") == (True, "E")
+    assert len(calls) == 2  # only the speed change notified
+
+    # Calm with no prior direction: leave it out so the polled value shows
+    calm = parse_realtime({"conditions": [{**ISS, "wind_speed_last": 0, "wind_dir_last": 0}]}, DID)
+    assert f"wind_dir_last_tx1_{DID}" not in calm
+    assert f"wind_dir_last_rose_tx1_{DID}" not in calm
+
+
 def test_values_go_stale():
     listener = make_listener()
     with patch.object(realtime.time, "monotonic", return_value=100.0):
